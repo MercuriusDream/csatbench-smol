@@ -1,6 +1,6 @@
 // Everything the page says, in each language it says it in. The page and llms.txt are written from here.
 // The scores are in board.js, which the board generator writes from the graded results.
-import { BOARD, FAMILIES, FULL, SUBJECTS, UPDATED } from './board.js';
+import { BOARD, FAMILIES, FULL, PAPERS, SUBJECTS, UPDATED } from './board.js';
 
 export const MARK = 'CSAT-benchmark-smol';
 export const HOME = 'https://mercuriusdream.com/';
@@ -17,6 +17,14 @@ export const TEXT = {
     lede: `Small open-weight language models take the 2026 Korean college entrance exam, the 수능. Totals out of ${FULL}.`,
     total: 'Total',
     subjects: ['Korean', 'Math', 'English', 'History', 'Inquiry'],
+    views: {
+      total: 'Total', korean: 'Korean', math: 'Math', english: 'English', history: 'History', inquiry: 'Inquiry', all: 'All',
+      'korean-common': 'Common', 'korean-speech': 'Speech and Writing', 'korean-language': 'Language and Media',
+      'math-common': 'Common', 'math-probability': 'Probability and Statistics', 'math-calculus': 'Calculus', 'math-geometry': 'Geometry',
+      science: 'Science', humanities: 'Humanities',
+      physics1: 'Physics I', chemistry1: 'Chemistry I', biology1: 'Life Science I', socioculture: 'Society and Culture',
+    },
+    partsOf: (name) => `Part of ${name} shown`,
     outOf: (full) => `out of ${full}`,
     off: '(w/o Thinking)',
     byGb: 'Total by GB',
@@ -49,6 +57,14 @@ export const TEXT = {
     lede: `작은 오픈 웨이트 언어 모델이 2026학년도 수능을 풉니다. 총점은 ${FULL}점 만점입니다.`,
     total: '총점',
     subjects: ['국어', '수학', '영어', '한국사', '탐구'],
+    views: {
+      total: '총점', korean: '국어', math: '수학', english: '영어', history: '한국사', inquiry: '탐구', all: '전체',
+      'korean-common': '공통', 'korean-speech': '화법과 작문', 'korean-language': '언어와 매체',
+      'math-common': '공통', 'math-probability': '확률과 통계', 'math-calculus': '미적분', 'math-geometry': '기하',
+      science: '과학탐구', humanities: '사회탐구',
+      physics1: '물리학Ⅰ', chemistry1: '화학Ⅰ', biology1: '생명과학Ⅰ', socioculture: '사회·문화',
+    },
+    partsOf: (name) => `${name}에서 표시할 부분`,
     outOf: (full) => `${full}점 만점`,
     off: '(Thinking 끔)',
     byGb: '용량별 총점',
@@ -100,11 +116,43 @@ export const LINKS = [
   { key: 'harness', href: HARNESS },
 ];
 
-export { BOARD, FAMILIES, FULL, SUBJECTS, UPDATED };
+export { BOARD, FAMILIES, FULL, PAPERS, SUBJECTS, UPDATED };
 
-// The axis of each chart: the marks it is out of, and where its lines go.
-export const TOTAL_TICKS = [0, 100, 200, 300, 400, 450];
-export const ticks = (full) => (full === 50 ? [0, 10, 20, 30, 40, 50] : [0, 25, 50, 75, 100]);
+// The lines across a chart: round marks up to the full marks, and the full marks themselves.
+export function ticks(full) {
+  const step = [5, 10, 20, 25, 50, 100].find((size) => full / size <= 5);
+  const lines = [];
+  for (let mark = 0; mark < full - step * 0.4; mark += step) lines.push(mark);
+  return [...lines, full];
+}
+
+// What the chart can show, as a tree. A subject unfolds into its papers: 국어 and 수학 into the
+// common part and each elective, 탐구 into science and humanities and each of those into its
+// papers. A view's score is picked out of a model's scores: `subjects` holds the five the total is
+// made of, `papers` every paper's own. A group of papers shows their mean, out of one paper's marks.
+const paper = (id) => ({ id, full: PAPERS[id], pick: (scores) => scores.papers[id] });
+const group = (id, ids) => {
+  const sat = ids.filter((each) => each in PAPERS);
+  return {
+    id,
+    full: PAPERS[sat[0]],
+    pick: (scores) => Math.round((sat.reduce((sum, each) => sum + scores.papers[each], 0) / sat.length) * 10) / 10,
+    children: sat.map(paper),
+  };
+};
+export const TREE = [
+  { id: 'total', full: FULL, pick: (scores) => scores.total },
+  { id: 'korean', full: SUBJECTS[0].full, pick: (scores) => scores.subjects[0], children: ['korean-common', 'korean-speech', 'korean-language'].map(paper) },
+  { id: 'math', full: SUBJECTS[1].full, pick: (scores) => scores.subjects[1], children: ['math-common', 'math-probability', 'math-calculus', 'math-geometry'].map(paper) },
+  { id: 'english', full: SUBJECTS[2].full, pick: (scores) => scores.subjects[2] },
+  { id: 'history', full: SUBJECTS[3].full, pick: (scores) => scores.subjects[3] },
+  {
+    id: 'inquiry',
+    full: SUBJECTS[4].full,
+    pick: (scores) => scores.subjects[4],
+    children: [group('science', ['physics1', 'chemistry1', 'biology1']), group('humanities', ['socioculture'])],
+  },
+];
 
 // The table's rows: each model, and under it its scores with thinking off where it has them.
 export const ROWS = BOARD.flatMap((entry) => (entry.off ? [{ ...entry, off: false }, { ...entry, ...entry.off, off: true }] : [{ ...entry, off: false }]));

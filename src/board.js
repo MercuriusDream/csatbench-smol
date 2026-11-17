@@ -2,6 +2,7 @@
 export const UPDATED = '2026-11-18';
 export const FULL = 450;
 export const SUBJECTS = [{"name": "Korean", "full": 100}, {"name": "Math", "full": 100}, {"name": "English", "full": 100}, {"name": "History", "full": 50}, {"name": "Inquiry", "full": 100}];
+export const PAPERS = {"korean-common": 76, "korean-speech": 24, "korean-language": 24, "math-common": 74, "math-probability": 26, "math-calculus": 26, "math-geometry": 26, "english": 100, "history": 50, "physics1": 50, "chemistry1": 50, "biology1": 50, "socioculture": 50};
 export const FAMILIES = [{"key": "gemma", "name": "Gemma 4"}, {"key": "bonsai", "name": "Ternary Bonsai 2"}, {"key": "nanbeige", "name": "Nanbeige4.2"}, {"key": "qwen", "name": "Qwen3.5"}, {"key": "kanana", "name": "Kanana-2"}, {"key": "lfm", "name": "LFM3"}];
 export const BOARD = [
   {
@@ -17,6 +18,21 @@ export const BOARD = [
       33,
       75.0
     ],
+    "papers": {
+      "korean-common": 76,
+      "korean-language": 15,
+      "korean-speech": 24,
+      "math-common": 74,
+      "math-geometry": 26,
+      "math-calculus": 22,
+      "math-probability": 26,
+      "english": 97,
+      "physics1": 33,
+      "socioculture": 41,
+      "biology1": 38,
+      "chemistry1": 38,
+      "history": 33
+    },
     "off": {
       "total": 327.5,
       "subjects": [
@@ -25,7 +41,22 @@ export const BOARD = [
         92,
         35,
         45.5
-      ]
+      ],
+      "papers": {
+        "korean-common": 63,
+        "korean-language": 15,
+        "korean-speech": 17,
+        "math-common": 58,
+        "math-geometry": 18,
+        "math-calculus": 22,
+        "math-probability": 14,
+        "english": 92,
+        "physics1": 20,
+        "socioculture": 29,
+        "biology1": 26,
+        "chemistry1": 16,
+        "history": 35
+      }
     }
   },
   {
@@ -41,6 +72,21 @@ export const BOARD = [
       27,
       79.0
     ],
+    "papers": {
+      "korean-common": 66,
+      "korean-language": 17,
+      "korean-speech": 24,
+      "math-common": 74,
+      "math-geometry": 22,
+      "math-calculus": 26,
+      "math-probability": 26,
+      "english": 94,
+      "physics1": 36,
+      "socioculture": 38,
+      "biology1": 43,
+      "chemistry1": 41,
+      "history": 27
+    },
     "off": null
   },
   {
@@ -56,6 +102,21 @@ export const BOARD = [
       20,
       54.5
     ],
+    "papers": {
+      "korean-common": 50,
+      "korean-language": 9,
+      "korean-speech": 22,
+      "math-common": 70,
+      "math-geometry": 22,
+      "math-calculus": 18,
+      "math-probability": 22,
+      "english": 90,
+      "physics1": 24,
+      "socioculture": 20,
+      "biology1": 37,
+      "chemistry1": 28,
+      "history": 20
+    },
     "off": null
   },
   {
@@ -71,6 +132,21 @@ export const BOARD = [
       38,
       50.0
     ],
+    "papers": {
+      "korean-common": 42,
+      "korean-language": 12,
+      "korean-speech": 19,
+      "math-common": 62,
+      "math-geometry": 18,
+      "math-calculus": 18,
+      "math-probability": 22,
+      "english": 90,
+      "physics1": 23,
+      "socioculture": 32,
+      "biology1": 26,
+      "chemistry1": 19,
+      "history": 38
+    },
     "off": {
       "total": 283.5,
       "subjects": [
@@ -79,7 +155,22 @@ export const BOARD = [
         90,
         25,
         42.5
-      ]
+      ],
+      "papers": {
+        "korean-common": 43,
+        "korean-language": 10,
+        "korean-speech": 20,
+        "math-common": 50,
+        "math-geometry": 18,
+        "math-calculus": 22,
+        "math-probability": 14,
+        "english": 90,
+        "physics1": 21,
+        "socioculture": 20,
+        "biology1": 34,
+        "chemistry1": 10,
+        "history": 25
+      }
     }
   },
   {
@@ -95,6 +186,21 @@ export const BOARD = [
       17,
       50.5
     ],
+    "papers": {
+      "korean-common": 39,
+      "korean-language": 17,
+      "korean-speech": 19,
+      "math-common": 66,
+      "math-geometry": 22,
+      "math-calculus": 18,
+      "math-probability": 22,
+      "english": 93,
+      "physics1": 21,
+      "socioculture": 24,
+      "biology1": 26,
+      "chemistry1": 30,
+      "history": 17
+    },
     "off": null
   },
   {
@@ -110,6 +216,21 @@ export const BOARD = [
       18,
       35.5
     ],
+    "papers": {
+      "korean-common": 34,
+      "korean-language": 5,
+      "korean-speech": 17,
+      "math-common": 66,
+      "math-geometry": 22,
+      "math-calculus": 18,
+      "math-probability": 22,
+      "english": 76,
+      "physics1": 17,
+      "socioculture": 17,
+      "biology1": 23,
+      "chemistry1": 14,
+      "history": 18
+    },
     "off": null
   },
   {
@@ -125,6 +246,21 @@ export const BOARD = [
       27,
       32.0
     ],
+    "papers": {
+      "korean-common": 30,
+      "korean-language": 9,
+      "korean-speech": 15,
+      "math-common": 54,
+      "math-geometry": 15,
+      "math-calculus": 14,
+      "math-probability": 14,
+      "english": 90,
+      "physics1": 15,
+      "socioculture": 17,
+      "biology1": 20,
+      "chemistry1": 12,
+      "history": 27
+    },
     "off": {
       "total": 237.7,
       "subjects": [
@@ -133,7 +269,22 @@ export const BOARD = [
         77,
         30,
         25.0
-      ]
+      ],
+      "papers": {
+        "korean-common": 32,
+        "korean-language": 6,
+        "korean-speech": 8,
+        "math-common": 54,
+        "math-geometry": 12,
+        "math-calculus": 11,
+        "math-probability": 15,
+        "english": 77,
+        "physics1": 13,
+        "socioculture": 15,
+        "biology1": 11,
+        "chemistry1": 11,
+        "history": 30
+      }
     }
   },
   {
@@ -149,6 +300,21 @@ export const BOARD = [
       18,
       32.0
     ],
+    "papers": {
+      "korean-common": 37,
+      "korean-language": 11,
+      "korean-speech": 10,
+      "math-common": 46,
+      "math-geometry": 11,
+      "math-calculus": 14,
+      "math-probability": 14,
+      "english": 78,
+      "physics1": 9,
+      "socioculture": 19,
+      "biology1": 23,
+      "chemistry1": 13,
+      "history": 18
+    },
     "off": null
   },
   {
@@ -164,6 +330,21 @@ export const BOARD = [
       30,
       29.5
     ],
+    "papers": {
+      "korean-common": 19,
+      "korean-language": 7,
+      "korean-speech": 12,
+      "math-common": 35,
+      "math-geometry": 12,
+      "math-calculus": 15,
+      "math-probability": 9,
+      "english": 58,
+      "physics1": 10,
+      "socioculture": 22,
+      "biology1": 19,
+      "chemistry1": 8,
+      "history": 30
+    },
     "off": null
   },
   {
@@ -179,6 +360,21 @@ export const BOARD = [
       21,
       5.5
     ],
+    "papers": {
+      "korean-common": 12,
+      "korean-language": 5,
+      "korean-speech": 4,
+      "math-common": 47,
+      "math-geometry": 11,
+      "math-calculus": 11,
+      "math-probability": 14,
+      "english": 75,
+      "physics1": 0,
+      "socioculture": 9,
+      "biology1": 0,
+      "chemistry1": 2,
+      "history": 21
+    },
     "off": null
   }
 ];

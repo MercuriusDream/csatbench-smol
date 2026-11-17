@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import {
-  BOARD, DEVICES, FAMILIES, FULL, HOME, LINKS, LOCALES, MARK, ROWS, SIZE_TICKS, STARRED, SUBJECTS, TEXT, TOTAL_TICKS, UPDATED,
+  BOARD, DEVICES, FAMILIES, FULL, HOME, LINKS, LOCALES, MARK, ROWS, SIZE_TICKS, STARRED, SUBJECTS, TEXT, TREE, UPDATED,
   points, size, sizeAt, ticks,
 } from './content.js';
 import { place, steps } from './field.js';
@@ -54,19 +54,30 @@ const KEYS = FAMILIES.flatMap((family) => {
 });
 const DARKER = KEYS.find((key) => key.off);
 
-// What the chart can show: the total, then each subject. `label` is its name as words on the page,
-// `said` its name in one language, for a label that is spoken.
-const VIEWS = [
-  { id: 'total', full: FULL, lines: TOTAL_TICKS, pick: (scores) => scores.total, label: <T k="total" />, said: (t) => t.total },
-  ...SUBJECTS.map((subject, index) => ({
-    id: subject.name.toLowerCase(),
-    full: subject.full,
-    lines: ticks(subject.full),
-    pick: (scores) => scores.subjects[index],
-    label: <Ti k="subjects" i={index} />,
-    said: (t) => t.subjects[index],
-  })),
-];
+// The name of one of the chart's views, in every language the page has.
+function Tv({ id }) {
+  return LOCALES.map((locale) => (
+    <span className={locale} lang={locale} key={locale}>{TEXT[locale].views[id]}</span>
+  ));
+}
+
+// The chart's views are a tree (see content.js), and the choice is a path down it: ['inquiry',
+// 'science', 'physics1']. Each step of the path has a row of tabs: the first row the subjects, and
+// under a subject that has papers a row for them, with "All" for the subject itself. A row
+// unfolds when the step above it is chosen. The view shown is the last step of the path.
+function levels(path) {
+  const rows = [];
+  let nodes = TREE;
+  let parent = null;
+  for (let depth = 0; nodes; depth += 1) {
+    const chosen = nodes.find((node) => node.id === path[depth]) ?? null;
+    rows.push({ depth, parent, nodes, chosen });
+    if (!chosen) break;
+    parent = chosen;
+    nodes = chosen.children;
+  }
+  return rows;
+}
 
 // A model's name as one plain word. The parts of its bar carry it from one view to the next, so
 // the browser knows each bar for the same bar and moves it instead of drawing another.
@@ -96,7 +107,7 @@ function useSideways() {
 
 // The tabs over the chart. The plane under the chosen tab is one object: it is moved to the tab,
 // never drawn again. Before the script has measured anything, the chosen tab wears the plane itself.
-function Tabs({ label, views, value, onChange, controls }) {
+function Tabs({ label, views, value, onChange, controls, depth }) {
   const track = useRef(null);
   const [at, setAt] = useState(null);
 
@@ -129,7 +140,7 @@ function Tabs({ label, views, value, onChange, controls }) {
         <span
           className="tabs-plane"
           aria-hidden="true"
-          style={{ width: at.w, height: at.h, transform: `translate(${at.x}px, ${at.y}px)` }}
+          style={{ width: at.w, height: at.h, transform: `translate(${at.x}px, ${at.y}px)`, viewTransitionName: `tabs-plane-${depth}` }}
         />
       )}
       {views.map((view, index) => (
@@ -138,14 +149,14 @@ function Tabs({ label, views, value, onChange, controls }) {
           role="tab"
           className="tab"
           key={view.id}
-          id={`tab-${view.id}`}
+          id={`tab-${depth}-${view.id}`}
           aria-selected={view.id === value}
           aria-controls={controls}
           tabIndex={view.id === value ? 0 : -1}
           onClick={() => onChange(view.id)}
           onKeyDown={(event) => onKeyDown(event, index)}
         >
-          {view.label}
+          <Tv id={view.id} />
         </button>
       ))}
     </div>
@@ -164,17 +175,17 @@ function Chart({ view, entries, t }) {
   const longest = Math.max(...entries.map((entry) => entry.name.length));
   const lead = Math.max(0, ...entries.map((entry, index) => entry.name.length * 0.4 * 0.875 - (index + 0.5) * 3.25));
   return (
-    <figure className="chart" aria-label={`${view.said(t)}, ${t.outOf(view.full)}`}>
+    <figure className="chart" aria-label={`${t.views[view.id]}, ${t.outOf(view.full)}`}>
       <div className="plot">
         <div className="axis" aria-hidden="true">
-          {view.lines.map((line) => (
+          {ticks(view.full).map((line) => (
             <span className="axis-label" key={line} style={{ '--at': line / view.full }}>{line}</span>
           ))}
         </div>
-        <div className="scroller" ref={region} {...sideways(t.sideways(view.said(t)))}>
+        <div className="scroller" ref={region} {...sideways(t.sideways(t.views[view.id]))}>
           <div className="sheet" style={{ '--count': entries.length, '--longest': longest, '--lead': `${lead.toFixed(3)}rem` }}>
             <div className="scale" aria-hidden="true">
-              {view.lines.map((line) => (
+              {ticks(view.full).map((line) => (
                 <span className="tick" key={line} style={{ '--at': line / view.full }} />
               ))}
             </div>
@@ -374,19 +385,21 @@ function useLocale() {
 }
 
 export default function App() {
-  const [shown, setShown] = useState('total');
+  const [path, setPath] = useState(['total']);
   const [locale, changeLocale] = useLocale();
   const t = TEXT[locale];
-  const view = VIEWS.find((candidate) => candidate.id === shown);
+  const rows = levels(path);
+  const last = rows[rows.length - 1];
+  const view = last.chosen ?? last.parent;
   const next = LOCALES[(LOCALES.indexOf(locale) + 1) % LOCALES.length];
 
   // Changing the view keeps every bar. Where the browser can, each one travels to its new place
   // and size; under reduced motion, and where it cannot, the chart changes in place.
-  function show(id) {
-    if (id === shown) return;
+  function show(next) {
+    if (next.join('/') === path.join('/')) return;
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (still || !document.startViewTransition) return setShown(id);
-    const morph = document.startViewTransition(() => flushSync(() => setShown(id)));
+    if (still || !document.startViewTransition) return setPath(next);
+    const morph = document.startViewTransition(() => flushSync(() => setPath(next)));
     // A second choice made while the first is still travelling ends the first. That is not a fault.
     morph.ready.catch(() => {});
     morph.finished.catch(() => {});
@@ -417,7 +430,19 @@ export default function App() {
           <section className="totals" aria-labelledby="scores-title">
             <h2 className="visually-hidden" id="scores-title"><T k="scores" /></h2>
             <div className="chart-head">
-              <Tabs label={t.scoreShown} views={VIEWS} value={shown} onChange={show} controls="scores-panel" />
+              <div className="tab-rows">
+                {rows.map(({ depth, parent, nodes, chosen }) => (
+                  <Tabs
+                    key={depth}
+                    depth={depth}
+                    label={parent ? t.partsOf(t.views[parent.id]) : t.scoreShown}
+                    views={parent ? [{ id: 'all' }, ...nodes] : nodes}
+                    value={chosen ? chosen.id : 'all'}
+                    onChange={(id) => show(id === 'all' ? path.slice(0, depth) : [...path.slice(0, depth), id])}
+                    controls="scores-panel"
+                  />
+                ))}
+              </div>
               <p className="chart-note">
                 {DARKER && (
                   <span className="chart-key">
@@ -428,7 +453,7 @@ export default function App() {
                 <span><T k="outOf" a={view.full} /></span>
               </p>
             </div>
-            <div role="tabpanel" id="scores-panel" aria-labelledby={`tab-${view.id}`}>
+            <div role="tabpanel" id="scores-panel" aria-labelledby={`tab-${last.depth}-${last.chosen ? last.chosen.id : 'all'}`}>
               <Chart view={view} entries={ranked(view)} t={t} />
             </div>
           </section>

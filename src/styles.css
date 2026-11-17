@@ -345,9 +345,18 @@ p {
 .chart-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: start;
   justify-content: space-between;
   gap: var(--space-2) var(--space-4);
+}
+
+/* The rows of tabs, one under another: the subjects, and under a chosen subject its papers. A row
+   unfolds when the step above it is chosen. */
+.tab-rows {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 /* Tabs. A track on the control plane with 3px of padding; the tabs and the plane under the chosen
@@ -373,7 +382,6 @@ p {
   left: 0;
   border-radius: 0;
   background: var(--plane-selected);
-  view-transition-name: tabs-plane;
   view-transition-class: fill;
 }
 
