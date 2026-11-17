@@ -211,7 +211,16 @@ export const BOARD = [
       "earth1": 18,
       "earth2": 15,
       "geography-korea": 15,
-      "chemistry2": 24
+      "chemistry2": 24,
+      "german": 48,
+      "russian": 42,
+      "vietnamese": 46,
+      "spanish": 44,
+      "arabic": 44,
+      "japanese": 39,
+      "chinese": 48,
+      "french": 45,
+      "classical-chinese": 44
     },
     "off": {
       "total": 283.5,
@@ -254,7 +263,16 @@ export const BOARD = [
         "earth1": 20,
         "earth2": 18,
         "geography-korea": 11,
-        "chemistry2": 8
+        "chemistry2": 8,
+        "german": 38,
+        "russian": 39,
+        "vietnamese": 37,
+        "spanish": 45,
+        "arabic": 42,
+        "japanese": 34,
+        "chinese": 39,
+        "french": 41,
+        "classical-chinese": 44
       }
     }
   },
