@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
+import Admissions from './Admissions.jsx';
 import {
   BOARD, DEVICES, FAMILIES, FULL, HOME, LINKS, LOCALES, MARK, ROWS, SIZE_TICKS, STARRED, SUBJECTS, TEXT, TREE, UPDATED,
   points, size, sizeAt, ticks,
@@ -505,6 +506,8 @@ export default function App() {
               <T k="scale" /> <time dateTime={UPDATED}><T k="updated" a={UPDATED} /></time>
             </p>
           </section>
+
+          <Admissions locale={locale} />
 
           {/* Why and how stand side by side across the page's width. */}
           <div className="words">

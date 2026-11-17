@@ -1114,3 +1114,144 @@ p {
     display: none;
   }
 }
+
+/* Audited score conversion and admission-line comparison. Tables keep their own horizontal
+   region on narrow screens; uncertainty is printed as a range, never hidden by colour. */
+.admissions h3 {
+  margin-top: var(--space-5);
+  margin-bottom: var(--space-3);
+}
+
+.admission-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3) var(--space-4);
+  margin-block: var(--space-4);
+}
+
+.admission-controls label {
+  display: grid;
+  gap: var(--space-1);
+  color: var(--ink-2);
+  font-size: 0.875rem;
+}
+
+.admission-model {
+  min-width: min(100%, 18rem);
+}
+
+.admission-controls select,
+.admission-controls input {
+  min-height: var(--control-height);
+  max-width: 100%;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--ink-1);
+  background: var(--plane-control);
+  font: var(--text-body);
+}
+
+.admission-controls input {
+  width: min(72vw, 22rem);
+}
+
+.admission-profiles {
+  display: flex;
+  border-radius: var(--radius);
+  background: var(--plane-control);
+}
+
+.admission-profiles .chip[aria-pressed='true'] {
+  background: var(--plane-selected);
+}
+
+.admission-summary {
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  background: var(--plane-raised);
+}
+
+.admission-summary ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin-top: var(--space-3);
+}
+
+.admission-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.admission-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.admission-table th,
+.admission-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  text-align: left;
+}
+
+.admission-table thead th {
+  color: var(--ink-2);
+  font-weight: 400;
+}
+
+.admission-table tbody th {
+  font-weight: 500;
+}
+
+.conversion-table {
+  min-width: 34rem;
+}
+
+.conversion-table td:not(:first-child),
+.ladder-table td:nth-child(3) {
+  white-space: nowrap;
+}
+
+.ladder-table {
+  min-width: 56rem;
+}
+
+.ladder-table tr[data-verdict='above'] td:nth-child(4) {
+  font-weight: 500;
+}
+
+.admission-unit-note {
+  display: block;
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.admissions .aside a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+@media (max-width: 40rem) {
+  .admission-controls,
+  .admission-controls label,
+  .admission-model {
+    width: 100%;
+  }
+
+  .admission-controls select,
+  .admission-controls input {
+    width: 100%;
+  }
+
+  .admission-profiles {
+    width: auto;
+  }
+}

@@ -110,6 +110,55 @@ export const TEXT = {
     switchTo: '이 페이지를 영어로 읽기',
   },
 };
+// The score-conversion and university-comparison section. Ranges and uncertainty are part of the
+// data, not text to be hidden: these strings never turn a comparison into an admission prediction.
+export const ADMISSION_TEXT = {
+  en: {
+    title: 'Standard scores, grades, percentiles and admission lines',
+    conversionTitle: 'Raw score → standard score / percentile / grade',
+    comparisonTitle: 'Against the 2026 어디가 70% mean-percentile lines',
+    chooseModel: 'Model run',
+    raw: 'Raw', standard: 'Standard', percentile: 'Percentile', grade: 'Grade',
+    natural: 'Science profile', humanities: 'Humanities profile',
+    chosen: (papers) => `Best combination chosen after scoring: ${papers}.`,
+    meanP: (range) => `Korean + Math + mean of two Inquiry percentiles, divided by 3: ${range}.`,
+    above: 'At or above', undetermined: 'Undetermined', below: 'Below', allVerdicts: 'All verdicts',
+    highestCleared: (value) => value === null ? 'No line cleared' : `Highest line cleared: ${value}`,
+    search: 'Filter university or unit', searchPlaceholder: 'Type a university or unit',
+    university: 'University', unit: 'Unit', line70: '70% line', verdict: 'Verdict', englishHistory: 'English / History grade (model · line)',
+    showing: ({ shown, total }) => `Showing ${shown} of ${total} matching units, highest line first.`,
+    noEntries: 'No matching units in this view.',
+    postChosen: 'The model sat every elective and four Inquiry papers; this combination was chosen after scoring. A human applicant chooses before the exam.',
+    conversionNote: 'Korean standard scores are Crux Consulting split-table estimates; percentiles use KICE distributions and formula. Below 100, math stays an official grade-band range. English and Korean History are absolute-graded and have no standard score or percentile.',
+    inquiryNote: 'An Inquiry range means the raw score does not determine one published value. A grade shown as 4/5 is unsettled across the stated institute cuts.',
+    lineNote: '어디가 publishes these university-submitted 2026 figures but does not define whose 70% they are or the formula. “At or above” compares means only; it does not mean admission.',
+    exclusions: 'Regional, school-record, arts/physical-education, incomplete-area and suspect rows are excluded. Subject requirements and eligibility are not checked.',
+    source: 'Source: 어디가, 2026 admission results',
+  },
+  ko: {
+    title: '표준점수·등급·백분위와 대입 비교',
+    conversionTitle: '원점수 → 표준점수 / 백분위 / 등급',
+    comparisonTitle: '2026학년도 어디가 백분위 70% 평균과 비교',
+    chooseModel: '모델 실행',
+    raw: '원점수', standard: '표준점수', percentile: '백분위', grade: '등급',
+    natural: '자연형', humanities: '인문형',
+    chosen: (papers) => `채점 후 고른 최적 조합: ${papers}.`,
+    meanP: (range) => `(국어 + 수학 + 탐구 2과목 평균) ÷ 3 평균백분위: ${range}.`,
+    above: '이상', undetermined: '정해지지 않음', below: '미만', allVerdicts: '모든 비교',
+    highestCleared: (value) => value === null ? '70% 선을 넘은 모집단위 없음' : `이상으로 비교되는 가장 높은 70% 선: ${value}`,
+    search: '대학 또는 모집단위 찾기', searchPlaceholder: '대학 또는 모집단위 입력',
+    university: '대학', unit: '모집단위', line70: '70% 선', verdict: '비교', englishHistory: '영어 / 한국사 등급 (모델 · 70% 선)',
+    showing: ({ shown, total }) => `조건에 맞는 모집단위 ${total}개 중 ${shown}개를 70% 선이 높은 순으로 표시합니다.`,
+    noEntries: '이 조건에 맞는 모집단위가 없습니다.',
+    postChosen: '모델은 모든 선택과목과 탐구 4과목을 응시했고, 표시한 조합은 채점 후에 골랐습니다. 실제 수험생은 시험 전에 고릅니다.',
+    conversionNote: '국어 표준점수는 크럭스 컨설팅의 공통·선택 환산표 추정치이며, 백분위는 평가원 도수분포와 산식으로 계산했습니다. 수학은 100점이 아니면 공식 등급 구간으로만 표시합니다. 영어·한국사는 절대평가라 표준점수와 백분위가 없습니다.',
+    inquiryNote: '탐구의 범위는 원점수만으로 공개 값 하나가 정해지지 않는다는 뜻입니다. 등급이 4/5처럼 보이면 기관 등급컷에 따라 달라집니다.',
+    lineNote: '어디가는 대학이 제출한 2026학년도 수치를 공개하지만 누구의 70%인지와 산식은 밝히지 않습니다. ‘이상’은 평균백분위 비교일 뿐 합격을 뜻하지 않습니다.',
+    exclusions: '지역인재·교과우수·예체능·일부 영역만 반영·이상치 모집단위는 뺐습니다. 수학·탐구 지정과 응시 자격은 확인하지 않았습니다.',
+    source: '출처: 어디가 2026학년도 정시 결과',
+  },
+};
+
 export const LOCALES = Object.keys(TEXT);
 
 // Sizes run from 1 to 32 GB, each octave the same width. A line stands at each size a device below has.
