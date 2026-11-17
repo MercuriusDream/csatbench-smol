@@ -376,5 +376,35 @@ export const BOARD = [
       "history": 21
     },
     "off": null
+  },
+  {
+    "name": "Kanana-2 3B",
+    "build": "4-bit",
+    "family": "kanana",
+    "gb": 2.16,
+    "total": 140.0,
+    "subjects": [
+      32.5,
+      21.0,
+      48,
+      17,
+      21.5
+    ],
+    "papers": {
+      "korean-common": 27,
+      "korean-language": 2,
+      "korean-speech": 9,
+      "math-common": 17,
+      "math-geometry": 5,
+      "math-calculus": 2,
+      "math-probability": 5,
+      "english": 48,
+      "physics1": 8,
+      "socioculture": 18,
+      "biology1": 10,
+      "chemistry1": 7,
+      "history": 17
+    },
+    "off": null
   }
 ];
