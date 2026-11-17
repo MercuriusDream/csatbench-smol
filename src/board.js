@@ -64,7 +64,26 @@ export const BOARD = [
         "socioculture": 29,
         "biology1": 26,
         "chemistry1": 16,
-        "history": 35
+        "history": 35,
+        "economics": 27,
+        "industry": 42,
+        "agriculture": 33,
+        "history-eastasia": 20,
+        "physics2": 27,
+        "commerce": 46,
+        "biology2": 34,
+        "ethics-life": 34,
+        "work-life": 36,
+        "history-world": 34,
+        "geography-world": 25,
+        "fisheries": 42,
+        "ethics-thought": 39,
+        "human-development": 43,
+        "politics-law": 39,
+        "earth1": 11,
+        "earth2": 17,
+        "geography-korea": 13,
+        "chemistry2": 17
       }
     }
   },
