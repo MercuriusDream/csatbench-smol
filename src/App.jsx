@@ -130,16 +130,16 @@ function Tabs({ label, views, value, onChange, controls }) {
 }
 
 // The chart: models along the bottom, marks up the side, one bar for each model with its score
-// over it. A model also run with thinking off carries that score as a darker, narrower bar in
-// front of its own, and as a second number under the first.
+// over it. A model also run with thinking off carries that score on the same bar, in the darker
+// colour: the two scores are two heights of one bar.
 // `longest` is the longest name, in letters: the room the slanted names need under the bars.
 // `lead` is the room the names need to the left of the first bar when the sheet moves sideways and
 // nothing may reach outside it: a name runs 0.4em to the left for each letter, from the middle of
-// its column, and a column is then 2.75rem wide. Both in rem, at the chart's text size of 0.875rem.
+// its column, and a column is then 3.25rem wide. Both in rem, at the chart's text size of 0.875rem.
 function Chart({ view, entries }) {
   const [region, sideways] = useSideways();
   const longest = Math.max(...entries.map((entry) => entry.name.length));
-  const lead = Math.max(0, ...entries.map((entry, index) => entry.name.length * 0.4 * 0.875 - (index + 0.5) * 2.75));
+  const lead = Math.max(0, ...entries.map((entry, index) => entry.name.length * 0.4 * 0.875 - (index + 0.5) * 3.25));
   return (
     <figure className="chart" aria-label={`${view.name}, out of ${view.full}`}>
       <div className="plot">
@@ -159,25 +159,30 @@ function Chart({ view, entries }) {
               {entries.map((entry) => {
                 const name = word(entry);
                 const both = entry.front !== null;
+                // The higher of the two scores stands behind with its number over it. The lower
+                // stands in front, on the same bar, with its number on it.
+                const offInFront = both && entry.front <= entry.value;
+                const ownInFront = both && !offInFront;
                 return (
                   <li
                     className="bar"
                     key={name}
+                    data-front={both ? (offInFront ? 'off' : 'own') : undefined}
                     style={{ ...series(entry.family), '--share': entry.value / view.full, '--front': both ? entry.front / view.full : 0 }}
                   >
                     <span className="bar-model" style={{ viewTransitionName: `name-${name}` }}>{entry.name}</span>
-                    <span className="bar-value" style={{ viewTransitionName: `value-${name}` }}>
-                      <span>{points(entry.value)}</span>
-                      {both && (
-                        <span className="bar-value-off">
-                          <span className="visually-hidden">{OFF} </span>
-                          {points(entry.front)}
-                        </span>
-                      )}
+                    <span className={ownInFront ? 'bar-value inside' : 'bar-value'} style={{ viewTransitionName: `value-${name}` }}>
+                      {points(entry.value)}
                     </span>
+                    {both && (
+                      <span className={offInFront ? 'bar-value off inside' : 'bar-value off'} style={{ viewTransitionName: `off-${name}` }}>
+                        <span className="visually-hidden">{OFF} </span>
+                        {points(entry.front)}
+                      </span>
+                    )}
                     <span className="bar-fill" aria-hidden="true" style={{ viewTransitionName: `fill-${name}` }} />
                     {both && (
-                      <span className="bar-fill bar-front" aria-hidden="true" style={{ ...series(entry.family, true), viewTransitionName: `front-${name}` }} />
+                      <span className="bar-fill bar-off" aria-hidden="true" style={{ ...series(entry.family, true), viewTransitionName: `front-${name}` }} />
                     )}
                   </li>
                 );

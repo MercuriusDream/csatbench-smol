@@ -266,6 +266,11 @@ a.chip:active {
   --series-lfm-off: light-dark(color-mix(in oklab, var(--series-lfm) 52%, black), color-mix(in oklab, var(--series-lfm) 70%, black));
   --series-raon-off: light-dark(color-mix(in oklab, var(--series-raon) 52%, black), color-mix(in oklab, var(--series-raon) 70%, black));
 
+  /* A number written on a bar. On a family's own colour it takes the inverse ink, which is the one
+     that reads there in each scheme; on the darker step it is light in both. */
+  --ink-on-series: var(--ink-inverse);
+  --ink-on-series-off: light-dark(oklch(0.985 0.002 250), oklch(0.95 0.004 250));
+
   /* A chart's own words are a step smaller than the text, and its lines are the quietest marks. */
   --text-chart: 400 0.875rem / 1.3 var(--font);
   --line: light-dark(oklch(0.24 0.01 250 / 0.12), oklch(0.95 0.004 250 / 0.14));
@@ -455,8 +460,8 @@ p {
 
 .plot {
   --plot-height: 22rem;
-  /* Two lines of numbers can stand over a bar. */
-  --value-room: 2.75rem;
+  /* A number stands over each bar. */
+  --value-room: 1.5rem;
 }
 
 .axis {
@@ -512,9 +517,9 @@ p {
   height: var(--plot-height);
 }
 
-/* One model. Its bar rises from the bottom line to its score. */
+/* One model. Its bar rises from the bottom line to its score, which stands over it. */
 .bar {
-  --bar-width: min(62%, 3.75rem);
+  --bar-width: min(80%, 3.75rem);
   position: relative;
   height: 100%;
 }
@@ -532,33 +537,43 @@ p {
   view-transition-class: fill;
 }
 
-/* The same model with thinking off: a darker bar, half as wide, in front of its own. It is kept
-   narrower so that both scores show whichever is the higher, and a gap of the page's plane runs
-   round it. */
-.bar-front {
-  width: calc(var(--bar-width) * 0.5);
+/* The same model with thinking off, on the same bar: the same width, the darker colour, as high
+   as that score. Of the two heights the lower lies in front, so both show, and its top is square
+   because it ends inside the bar. */
+.bar-off {
   height: calc(var(--front) * 100%);
-  box-shadow:
-    -2px 0 0 var(--plane-base),
-    2px 0 0 var(--plane-base),
-    0 -2px 0 var(--plane-base);
 }
 
-/* The score stands over the higher of the two bars. The thinking-off score is the quieter line. */
+.bar[data-front='off'] .bar-off,
+.bar[data-front='own'] .bar-fill:not(.bar-off) {
+  z-index: 1;
+  border-radius: 0;
+}
+
+/* A score stands over its bar. The lower of two scores is written on its own part of the bar, at
+   the top of it, in an ink that reads on that colour. */
 .bar-value {
   position: absolute;
-  bottom: calc(max(var(--share), var(--front)) * 100% + 0.1875rem);
+  bottom: calc(var(--share) * 100% + 0.1875rem);
   left: 50%;
-  display: grid;
-  justify-items: center;
+  z-index: 2;
   font-variant-numeric: tabular-nums;
-  line-height: 1.2;
   white-space: nowrap;
   translate: -50% 0;
 }
 
-.bar-value-off {
-  color: var(--ink-2);
+.bar-value.off {
+  bottom: calc(var(--front) * 100% + 0.1875rem);
+}
+
+.bar-value.inside {
+  bottom: max(calc(var(--share) * 100% - 1.5em), 0.125rem);
+  color: var(--ink-on-series);
+}
+
+.bar-value.off.inside {
+  bottom: max(calc(var(--front) * 100% - 1.5em), 0.125rem);
+  color: var(--ink-on-series-off);
 }
 
 /* The name hangs from the foot of its bar and slants down to the left, so it ends under the bar
@@ -720,7 +735,7 @@ p {
   }
 
   .plot .sheet {
-    min-width: calc(var(--lead) + var(--count) * 2.75rem);
+    min-width: calc(var(--lead) + var(--count) * 3.25rem);
     padding-inline-start: var(--lead);
   }
 
@@ -982,11 +997,19 @@ p {
     background: CanvasText;
   }
 
-  /* The darker bar in front is told from its own by an edge. */
-  .bar-front {
+  /* The darker part of a bar is told from the rest by an edge, and the number on it is plain text. */
+  .bar-off {
     border: 1px solid CanvasText;
     background: Canvas;
-    box-shadow: none;
+  }
+
+  .bar[data-front='own'] .bar-fill:not(.bar-off) {
+    border: 1px solid Canvas;
+  }
+
+  .bar-value.inside {
+    color: CanvasText;
+    background: Canvas;
   }
 
   .tick,
