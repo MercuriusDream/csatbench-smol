@@ -647,9 +647,7 @@ export default function App() {
 
           {/* Why, what follows from the scores, and how: one column of plain text across the page's width. */}
           <section className="words" aria-label={t.whyTitle}>
-            <p><T k="why" /></p>
             <p><T k="urge" /></p>
-            <p><T k="how" /></p>
             <ul className="rows">
               {LINKS.map((link) => (
                 <li key={link.href}>
