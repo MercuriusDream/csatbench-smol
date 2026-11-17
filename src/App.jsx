@@ -86,7 +86,12 @@ const word = (entry) => entry.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 // The board's models with one view's scores, highest first. Models level on a score keep the
 // order of their totals.
 const ranked = (view) =>
-  BOARD.map((entry) => ({ ...entry, value: view.pick(entry), front: entry.off ? view.pick(entry.off) : null })).sort((a, b) => b.value - a.value);
+  BOARD.map((entry) => {
+    const front = entry.off ? view.pick(entry.off) : null;
+    return { ...entry, value: view.pick(entry), front: Number.isFinite(front) ? front : null };
+  })
+    .filter((entry) => Number.isFinite(entry.value))
+    .sort((a, b) => b.value - a.value);
 
 // A chart keeps its form on every screen. Where the screen is too narrow for it, the chart is
 // moved sideways inside its own region, and that region can then be reached and named.
@@ -172,7 +177,7 @@ function Tabs({ label, views, value, onChange, controls, depth }) {
 // its column, and a column is then 3.25rem wide. Both in rem, at the chart's text size of 0.875rem.
 function Chart({ view, entries, t }) {
   const [region, sideways] = useSideways();
-  const longest = Math.max(...entries.map((entry) => entry.name.length));
+  const longest = Math.max(0, ...entries.map((entry) => entry.name.length));
   const lead = Math.max(0, ...entries.map((entry, index) => entry.name.length * 0.4 * 0.875 - (index + 0.5) * 3.25));
   return (
     <figure className="chart" aria-label={`${t.views[view.id]}, ${t.outOf(view.full)}`}>

@@ -22,7 +22,16 @@ export const TEXT = {
       'korean-common': 'Common', 'korean-speech': 'Speech and Writing', 'korean-language': 'Language and Media',
       'math-common': 'Common', 'math-probability': 'Probability and Statistics', 'math-calculus': 'Calculus', 'math-geometry': 'Geometry',
       science: 'Science', humanities: 'Humanities',
-      physics1: 'Physics I', chemistry1: 'Chemistry I', biology1: 'Life Science I', socioculture: 'Society and Culture',
+      vocational: 'Vocational', language: 'Second language',
+      physics1: 'Physics I', chemistry1: 'Chemistry I', biology1: 'Life Science I', earth1: 'Earth Science I',
+      physics2: 'Physics II', chemistry2: 'Chemistry II', biology2: 'Life Science II', earth2: 'Earth Science II',
+      'ethics-life': 'Life and Ethics', 'ethics-thought': 'Ethics and Thought', 'geography-korea': 'Korean Geography',
+      'geography-world': 'World Geography', 'history-eastasia': 'East Asian History', 'history-world': 'World History',
+      economics: 'Economics', 'politics-law': 'Politics and Law', socioculture: 'Society and Culture',
+      'work-life': 'Successful Working Life', agriculture: 'Basic Agricultural Technology', industry: 'General Industry',
+      commerce: 'Commercial Economics', fisheries: 'Basics of Fisheries and Shipping', 'human-development': 'Human Development',
+      german: 'German I', french: 'French I', spanish: 'Spanish I', chinese: 'Chinese I', japanese: 'Japanese I',
+      russian: 'Russian I', arabic: 'Arabic I', vietnamese: 'Vietnamese I', 'classical-chinese': 'Classical Chinese I',
     },
     partsOf: (name) => `Part of ${name} shown`,
     outOf: (full) => `out of ${full}`,
@@ -62,7 +71,16 @@ export const TEXT = {
       'korean-common': '공통', 'korean-speech': '화법과 작문', 'korean-language': '언어와 매체',
       'math-common': '공통', 'math-probability': '확률과 통계', 'math-calculus': '미적분', 'math-geometry': '기하',
       science: '과학탐구', humanities: '사회탐구',
-      physics1: '물리학Ⅰ', chemistry1: '화학Ⅰ', biology1: '생명과학Ⅰ', socioculture: '사회·문화',
+      vocational: '직업탐구', language: '제2외국어/한문',
+      physics1: '물리학Ⅰ', chemistry1: '화학Ⅰ', biology1: '생명과학Ⅰ', earth1: '지구과학Ⅰ',
+      physics2: '물리학Ⅱ', chemistry2: '화학Ⅱ', biology2: '생명과학Ⅱ', earth2: '지구과학Ⅱ',
+      'ethics-life': '생활과 윤리', 'ethics-thought': '윤리와 사상', 'geography-korea': '한국지리',
+      'geography-world': '세계지리', 'history-eastasia': '동아시아사', 'history-world': '세계사',
+      economics: '경제', 'politics-law': '정치와 법', socioculture: '사회·문화',
+      'work-life': '성공적인 직업생활', agriculture: '농업 기초 기술', industry: '공업 일반',
+      commerce: '상업 경제', fisheries: '수산·해운 산업 기초', 'human-development': '인간 발달',
+      german: '독일어Ⅰ', french: '프랑스어Ⅰ', spanish: '스페인어Ⅰ', chinese: '중국어Ⅰ', japanese: '일본어Ⅰ',
+      russian: '러시아어Ⅰ', arabic: '아랍어Ⅰ', vietnamese: '베트남어Ⅰ', 'classical-chinese': '한문Ⅰ',
     },
     partsOf: (name) => `${name}에서 표시할 부분`,
     outOf: (full) => `${full}점 만점`,
@@ -131,12 +149,15 @@ export function ticks(full) {
 // papers. A view's score is picked out of a model's scores: `subjects` holds the five the total is
 // made of, `papers` every paper's own. A group of papers shows their mean, out of one paper's marks.
 const paper = (id) => ({ id, full: PAPERS[id], pick: (scores) => scores.papers[id] });
+// A group holds the papers of it that some model has sat. A model that has not sat all of them
+// has no score for the group, and one that has not sat a paper is left out of that paper's view.
 const group = (id, ids) => {
   const sat = ids.filter((each) => each in PAPERS);
+  if (!sat.length) return null;
   return {
     id,
     full: PAPERS[sat[0]],
-    pick: (scores) => Math.round((sat.reduce((sum, each) => sum + scores.papers[each], 0) / sat.length) * 10) / 10,
+    pick: (scores) => (sat.every((each) => each in scores.papers) ? Math.round((sat.reduce((sum, each) => sum + scores.papers[each], 0) / sat.length) * 10) / 10 : undefined),
     children: sat.map(paper),
   };
 };
@@ -150,9 +171,15 @@ export const TREE = [
     id: 'inquiry',
     full: SUBJECTS[4].full,
     pick: (scores) => scores.subjects[4],
-    children: [group('science', ['physics1', 'chemistry1', 'biology1']), group('humanities', ['socioculture'])],
+    children: [
+      group('science', ['physics1', 'chemistry1', 'biology1', 'earth1', 'physics2', 'chemistry2', 'biology2', 'earth2']),
+      group('humanities', ['ethics-life', 'ethics-thought', 'geography-korea', 'geography-world', 'history-eastasia', 'history-world', 'economics', 'politics-law', 'socioculture']),
+      group('vocational', ['work-life', 'agriculture', 'industry', 'commerce', 'fisheries', 'human-development']),
+    ].filter(Boolean),
   },
-];
+  // Outside the total: the second-language papers, once a model has sat them.
+  group('language', ['german', 'french', 'spanish', 'chinese', 'japanese', 'russian', 'arabic', 'vietnamese', 'classical-chinese']),
+].filter(Boolean);
 
 // The table's rows: each model, and under it its scores with thinking off where it has them.
 export const ROWS = BOARD.flatMap((entry) => (entry.off ? [{ ...entry, off: false }, { ...entry, ...entry.off, off: true }] : [{ ...entry, off: false }]));
