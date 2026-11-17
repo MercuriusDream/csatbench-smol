@@ -1569,3 +1569,91 @@ p {
   border: 0;
   cursor: default;
 }
+
+/* The table of all scores. Wide: it moves sideways in its own region, the model held at the left. */
+.score-table-wrap {
+  margin-inline: calc(var(--inset-control-compact) * -1);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.score-table-wrap:focus-visible {
+  outline-offset: calc(var(--focus-width) * -1);
+}
+
+.score-table {
+  border-collapse: separate;
+  border-spacing: 0 2px;
+  min-width: 100%;
+  font: var(--text-chart);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.score-table th,
+.score-table td {
+  padding: var(--space-2) var(--space-2);
+  text-align: end;
+  font-weight: 400;
+}
+
+.score-table thead th {
+  color: var(--ink-2);
+  vertical-align: bottom;
+}
+
+.score-table .st-group {
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+}
+
+.score-table .st-full {
+  display: block;
+  color: var(--ink-2);
+  font-size: 0.75rem;
+}
+
+.score-table .st-model {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  padding-inline-start: var(--inset-control-compact);
+  text-align: start;
+  background: var(--plane-base);
+}
+
+.score-table tbody tr > * {
+  background: var(--plane-raised);
+}
+
+.score-table tbody tr > :first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.score-table tbody tr > :last-child {
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding-inline-end: var(--inset-control-compact);
+}
+
+.score-table tbody td {
+  color: var(--ink-2);
+}
+
+.score-table tbody .st-total {
+  color: var(--ink-1);
+}
+
+/* A model's thinking-off run: the row under its own, set back. */
+.score-table tbody tr[data-off] > * {
+  color: var(--ink-2);
+  background: var(--plane-base);
+}
+
+.score-table tbody tr[data-off] .st-model {
+  padding-inline-start: calc(var(--inset-control-compact) + var(--space-5));
+}
+
+.score-table .st-model .swatch {
+  display: inline-block;
+  margin-inline-end: var(--space-2);
+}

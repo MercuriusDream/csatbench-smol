@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import Admissions from './Admissions.jsx';
 import {
-  BOARD, DEVICES, FAMILIES, FULL, HOME, LINKS, LOCALES, MARK, ROWS, SIZE_TICKS, STARRED, SUBJECTS, TEXT, TREE, UPDATED,
+  BOARD, DEVICES, FAMILIES, FULL, PAPERS, HOME, LINKS, LOCALES, MARK, ROWS, SIZE_TICKS, STARRED, SUBJECTS, TEXT, TREE, UPDATED,
   points, size, sizeAt, ticks,
 } from './content.js';
 import { METRICS, card, feasible, metricOf } from './converted.js';
@@ -516,6 +516,75 @@ function Card({ at, t, profile }) {
   );
 }
 
+// The table of all scores: every paper's raw score, grouped by subject (국어 and 수학 by their
+// common part and each elective, 탐구 paper by paper), the 450-point total, and the converted 표점,
+// 평백 and 누백 for the profile chosen above. It is wide, so it moves sideways inside its own
+// region, with the model's name held at the left.
+const TABLE_GROUPS = [
+  ['korean', ['korean-common', 'korean-speech', 'korean-language']],
+  ['math', ['math-common', 'math-probability', 'math-calculus', 'math-geometry']],
+  ['english', ['english']],
+  ['history', ['history']],
+  ['inquiry', ['physics1', 'chemistry1', 'biology1', 'earth1', 'physics2', 'chemistry2', 'biology2', 'earth2',
+    'ethics-life', 'ethics-thought', 'geography-korea', 'geography-world', 'history-eastasia', 'history-world', 'economics', 'politics-law', 'socioculture',
+    'work-life', 'agriculture', 'industry', 'commerce', 'fisheries', 'human-development']],
+].map(([id, papers]) => [id, papers.filter((paper) => paper in PAPERS)]).filter(([, papers]) => papers.length);
+const SHORT = { 'korean-common': 'common', 'math-common': 'common' };
+
+function ScoreTable({ t, profile }) {
+  const [region, sideways] = useSideways();
+  const rows = BOARD.flatMap((entry) => (entry.off ? [[entry, false], [entry, true]] : [[entry, false]]));
+  const value = (entry, off, paper) => (off ? entry.off?.papers?.[paper] : entry.papers?.[paper]);
+  return (
+    <div className="score-table-wrap" ref={region} {...sideways(t.allScores)}>
+      <table className="score-table">
+        <thead>
+          <tr>
+            <th rowSpan={2} className="st-model" scope="col"><T k="model" /></th>
+            <th rowSpan={2} scope="col">GB</th>
+            {TABLE_GROUPS.map(([id, papers]) => (
+              <th key={id} colSpan={papers.length} scope="colgroup" className="st-group"><Tv id={id} /></th>
+            ))}
+            <th rowSpan={2} scope="col"><Tv id="total" /> <span className="st-full">{FULL}</span></th>
+            <th rowSpan={2} scope="col"><Tv id="standard" /></th>
+            <th rowSpan={2} scope="col"><Tv id="mean" /></th>
+            <th rowSpan={2} scope="col"><Tv id="cumulative" /></th>
+          </tr>
+          <tr>
+            {TABLE_GROUPS.flatMap(([id, papers]) => papers.map((paper) => (
+              <th key={paper} scope="col" className="st-paper">
+                {papers.length > 1 ? <Tv id={SHORT[paper] ? 'korean-common' : paper} /> : <span className="visually-hidden"><Tv id={paper} /></span>}
+                <span className="st-full">{PAPERS[paper]}</span>
+              </th>
+            )))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(([entry, off]) => (
+            <tr key={`${entry.name} ${off}`} data-off={off ? '' : undefined}>
+              <th scope="row" className="st-model">
+                <span className="swatch" style={series(entry.family, off)} aria-hidden="true" />
+                {off ? <span><span className="visually-hidden">{entry.name} </span><T k="off" /></span>
+                  : <span>{entry.name}{entry.build === STARRED ? '*' : entry.build && <span className="entry-detail"> {entry.build}</span>}</span>}
+              </th>
+              <td>{size(entry.gb)}</td>
+              {TABLE_GROUPS.flatMap(([, papers]) => papers.map((paper) => {
+                const v = value(entry, off, paper);
+                return <td key={paper}>{Number.isFinite(v) ? points(v) : '—'}</td>;
+              }))}
+              <td className="st-total">{points(off ? entry.off.total : entry.total)}</td>
+              {['standard', 'mean', 'cumulative'].map((metric) => {
+                const m = metricOf(entry, off, metric, profile);
+                return <td key={metric}>{m ? m.label : '—'}</td>;
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function App() {
   const [cardAt, cardHandlers] = useCard();
   const [metric, setMetric] = useState('raw');
@@ -624,24 +693,7 @@ export default function App() {
 
           <section className="detail" aria-labelledby="all-title">
             <h2 id="all-title"><T k="allScores" /></h2>
-            <div className="board" role="table" aria-labelledby="all-title">
-              <div className="board-head" role="row">
-                <span role="columnheader"><T k="model" /></span>
-                <span className="head-subject" role="columnheader">GB</span>
-                {SUBJECTS.map((subject, index) => (
-                  <span className="head-subject" role="columnheader" key={subject.name}>
-                    <Ti k="subjects" i={index} />
-                    <span className="visually-hidden"> <T k="outOf" a={subject.full} /></span>
-                  </span>
-                ))}
-                <span className="head-total" role="columnheader"><T k="total" /></span>
-              </div>
-              <ol className="entries" role="rowgroup">
-                {ROWS.map((row) => (
-                  <Entry key={`${row.name} ${row.off}`} row={row} />
-                ))}
-              </ol>
-            </div>
+            <ScoreTable t={t} profile={profile} />
             {ROWS.some((row) => row.build === STARRED) && <p className="aside"><T k="starred" /></p>}
           </section>
 
