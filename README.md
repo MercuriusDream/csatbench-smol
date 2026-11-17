@@ -2,7 +2,7 @@
 
 Small open-weight language models take the 2026 Korean college entrance exam, the 2026학년도 대학수학능력시험.
 
-The scores are at [csatsmol.mercuriusdream.com](https://csatsmol.mercuriusdream.com/).
+The scores are at [csat.mercuriusdream.com](https://csat.mercuriusdream.com/).
 
 ## Why
 
@@ -37,4 +37,4 @@ bun run preview  # dist/ served the way GitHub Pages serves it
 
 `src/board.js` holds the scores, and nothing else. `src/content.js` holds every word on the page; the build also writes them to `llms.txt`.
 
-A push to `main` builds and deploys through `.github/workflows/deploy.yml`. The custom domain is set in the repository's Pages settings, and DNS has one record for it: `csatsmol` as a CNAME to `mercuriusdream.github.io`.
+A push to `main` builds and deploys through `.github/workflows/deploy.yml`. The custom domain is set in the repository's Pages settings, and DNS has one record for it: `csat` as a CNAME to `mercuriusdream.github.io`.
