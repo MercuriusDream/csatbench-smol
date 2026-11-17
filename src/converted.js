@@ -1,4 +1,4 @@
-import { ADMISSION_MODELS } from './admissions.js';
+import { ADMISSION_ENTRIES, ADMISSION_MODELS } from './admissions.js';
 import { BOARD, points } from './content.js';
 
 // Admission records distinguish runs by build and thinking mode.
@@ -28,11 +28,15 @@ function rankBand(score) {
   return [i ? cutoffs[i - 1][1] : 0, percent];
 }
 
-function converted(entry, off, metric) {
-  const key = entry.off && !off ? entry.name + ' (high)' : names[entry.name] ?? entry.name;
-  const model = ADMISSION_MODELS[key];
+const keyOf = (entry, off) => (entry.off && !off ? entry.name + ' (high)' : names[entry.name] ?? entry.name);
+
+// The rank table is for the science profile (국수탐(2) with two 과탐 subjects); the humanities
+// profile has no 누백 here rather than one borrowed from it.
+function converted(entry, off, metric, profileName = 'natural') {
+  const model = ADMISSION_MODELS[keyOf(entry, off)];
   if (!model) return [];
-  const profile = model.profiles.natural;
+  if (metric === 'cumulative' && profileName !== 'natural') return [];
+  const profile = model.profiles[profileName];
   const subjects = { ...model.korean, ...model.math, ...model.inquiry };
   const total = [0, 1].map(i => profile.combination.reduce((sum, id) => sum + subjects[id].standard[i], 0));
   let [low, high] = metric === 'mean' ? profile.percentile : total;
@@ -61,16 +65,31 @@ export function convertedRows(metric) {
 
 // One run's converted score for a metric: { low, high, label }, or null where the run has none.
 // A range means the published conversions do not pin the value down; it is never averaged.
-export function metricOf(entry, off, metric) {
+export function metricOf(entry, off, metric, profile = 'natural') {
   if (metric === 'raw') {
     const total = off ? entry.off?.total : entry.total;
     return Number.isFinite(total) ? { low: total, high: total, label: points(total) } : null;
   }
-  return converted(entry, off, metric)[0] ?? null;
+  return converted(entry, off, metric, profile)[0] ?? null;
 }
 
 // Every metric for one model, its own run and its thinking-off run, for the hover card.
 export const METRICS = ['raw', 'standard', 'mean', 'cumulative'];
-export function card(entry) {
-  return METRICS.map((metric) => ({ metric, own: metricOf(entry, false, metric), off: entry.off ? metricOf(entry, true, metric) : null }));
+export function card(entry, profile = 'natural') {
+  return METRICS.map((metric) => ({ metric, own: metricOf(entry, false, metric, profile), off: entry.off ? metricOf(entry, true, metric, profile) : null }));
+}
+
+// The highest 2026 어디가 70% lines a run's mean percentile is at or above, for one profile: one
+// unit per university, highest first. A comparison of means, not an admission.
+const rhu = (value) => Math.floor(value + 0.5);
+export function feasible(entry, off, profileName = 'natural', n = 3) {
+  const model = ADMISSION_MODELS[keyOf(entry, off)];
+  if (!model) return [];
+  const p = model.profiles[profileName];
+  const seen = new Set();
+  return ADMISSION_ENTRIES
+    .filter((line) => line[profileName] && rhu(p.percentile[0]) >= line.value)
+    .sort((a, b) => b.value - a.value || a.university.localeCompare(b.university))
+    .filter((line) => !seen.has(line.university) && seen.add(line.university))
+    .slice(0, n);
 }

@@ -5,7 +5,7 @@ import {
   BOARD, DEVICES, FAMILIES, FULL, HOME, LINKS, LOCALES, MARK, ROWS, SIZE_TICKS, STARRED, SUBJECTS, TEXT, TREE, UPDATED,
   points, size, sizeAt, ticks,
 } from './content.js';
-import { METRICS, card, metricOf } from './converted.js';
+import { METRICS, card, feasible, metricOf } from './converted.js';
 import { place, steps } from './field.js';
 import { leaveTo } from './veil.js';
 
@@ -91,10 +91,10 @@ const ranked = (view) =>
   BOARD.flatMap((entry) => {
     const own = view.pick(entry);
     const front = entry.off ? view.pick(entry.off) : null;
-    if (Number.isFinite(own)) return [{ ...entry, card: card(entry), value: own, front: Number.isFinite(front) ? front : null }];
+    if (Number.isFinite(own)) return [{ ...entry, value: own, front: Number.isFinite(front) ? front : null }];
     // An add-on paper may be finished only in the thinking-off run so far. Show that score as
     // one darker bar instead of dropping it because the thinking-on run has not reached it yet.
-    if (Number.isFinite(front)) return [{ ...entry, card: card(entry), value: front, front: null, offOnly: true }];
+    if (Number.isFinite(front)) return [{ ...entry, value: front, front: null, offOnly: true }];
     return [];
   })
     .sort((a, b) => b.value - a.value);
@@ -177,11 +177,11 @@ function Tabs({ label, views, value, onChange, controls, depth }) {
 // The board's models with one metric's whole-exam value, best first (smallest first for 누백,
 // where smaller is better). A value pinned down only to a range is drawn solid to its low end and
 // faint to its high end.
-const metricEntries = (metric) =>
+const metricEntries = (metric, profile) =>
   BOARD.flatMap((entry) => {
-    const own = metricOf(entry, false, metric);
-    const off = entry.off ? metricOf(entry, true, metric) : null;
-    const base = { ...entry, card: card(entry) };
+    const own = metricOf(entry, false, metric, profile);
+    const off = entry.off ? metricOf(entry, true, metric, profile) : null;
+    const base = { ...entry };
     if (own) return [{ ...base, value: own.low, high: own.high, label: own.label, front: off ? off.low : null, frontHigh: off ? off.high : null, frontLabel: off ? off.label : null }];
     if (off) return [{ ...base, value: off.low, high: off.high, label: off.label, front: null, offOnly: true }];
     return [];
@@ -189,13 +189,15 @@ const metricEntries = (metric) =>
 
 // What a pointer resting on a model shows: its build and size, and its whole-exam score in every
 // metric, with thinking and without.
-function Tip({ entry, t }) {
+function Tip({ entry, t, profile }) {
+  const rows = card(entry, profile);
+  const lines = [[false, feasible(entry, false, profile)], ...(entry.off ? [[true, feasible(entry, true, profile)]] : [])];
   return (
     <span className="tip">
       <span className="tip-name">{entry.name}</span>
-      <span className="tip-detail">{[entry.build, `${size(entry.gb)} GB`].filter(Boolean).join(' · ')}</span>
+      <span className="tip-detail">{[entry.build, `${size(entry.gb)} GB`, t.views[`p-${profile}`]].filter(Boolean).join(' · ')}</span>
       <span className="tip-rows">
-        {entry.card.map(({ metric, own, off }) => (own || off) && (
+        {rows.map(({ metric, own, off }) => (own || off) && (
           <span className="tip-row" key={metric}>
             <span className="tip-label">{t.views[metric]}</span>
             <span className="tip-value">{own ? own.label : '—'}</span>
@@ -203,7 +205,18 @@ function Tip({ entry, t }) {
           </span>
         ))}
       </span>
-      {entry.off && <span className="tip-detail"><span className="swatch" style={series(entry.family, true)} aria-hidden="true" /> {t.off}</span>}
+      {lines.some(([, list]) => list.length) && <span className="tip-detail">{t.top3}</span>}
+      {lines.map(([off, list]) => list.length > 0 && (
+        <span className="tip-lines" key={String(off)}>
+          {off && <span className="tip-detail">{t.top3Off}</span>}
+          {list.map((line) => (
+            <span className="tip-row" key={line.id}>
+              <span className="tip-label">{line.university} {line.unit}</span>
+              <span className="tip-value">{line.value}</span>
+            </span>
+          ))}
+        </span>
+      ))}
     </span>
   );
 }
@@ -283,8 +296,8 @@ const metrics = METRICS.map((id) => ({ id }));
 // nothing: it starts a little under the lowest value, on a round number. For 누백, where smaller
 // is better, the scale is turned over so that better is still up.
 const LONGEST_DEVICE = Math.max(...DEVICES.map((device) => device.name.length));
-function fieldOf(metric) {
-  const rows = BOARD.map((entry) => ({ entry, own: metricOf(entry, false, metric), off: entry.off ? metricOf(entry, true, metric) : null }));
+function fieldOf(metric, profile) {
+  const rows = BOARD.map((entry) => ({ entry, own: metricOf(entry, false, metric, profile), off: entry.off ? metricOf(entry, true, metric, profile) : null }));
   const values = rows.flatMap((row) => [row.own?.low, row.off?.low]).filter(Number.isFinite);
   let lo; let hi; let step; let up;
   if (metric === 'cumulative') {
@@ -298,16 +311,16 @@ function fieldOf(metric) {
   }
   const lines = [];
   for (let v = Math.min(lo, hi); v <= Math.max(lo, hi) + 1e-9; v += step) lines.push(v);
-  const marks = rows.filter((row) => row.own).map((row) => ({ ...row.entry, card: card(row.entry), x: sizeAt(row.entry.gb), y: up(row.own.low), label: row.entry.name, shown: row.own.label }));
+  const marks = rows.filter((row) => row.own).map((row) => ({ ...row.entry, x: sizeAt(row.entry.gb), y: up(row.own.low), label: row.entry.name, shown: row.own.label }));
   const twins = rows.filter((row) => row.own && row.off).map((row) => ({ ...row.entry, x: sizeAt(row.entry.gb), y: up(row.off.low), main: up(row.own.low), shown: row.off.label }));
   return { lines, up, marks, twins, spots: place(marks, { width: 640, height: 352, also: twins }), line: steps([...marks, ...twins]) };
 }
 
 // Totals against the size of the weights, as dots, with the devices that have that much memory
 // named under the sizes.
-function Field({ t, metric }) {
+function Field({ t, metric, profile }) {
   const [region, sideways] = useSideways();
-  const { lines: FIELD_TICKS, up, marks: MARKS, twins: TWINS, spots: SPOTS, line: LINE } = fieldOf(metric);
+  const { lines: FIELD_TICKS, up, marks: MARKS, twins: TWINS, spots: SPOTS, line: LINE } = fieldOf(metric, profile);
   return (
     <div className="field">
       <div className="axis" aria-hidden="true">
@@ -442,9 +455,21 @@ function useLocale() {
   return [locale, change];
 }
 
+// The metric and profile switch. Both top charts carry one, and both follow the same choice.
+function MetricSwitch({ id, metric, profile, onMetric, onProfile, t }) {
+  return (
+    <div className="metric-switch">
+      <Tabs depth={`metric${id}`} label={t.scoreShown} views={metrics} value={metric} onChange={onMetric} controls="scores-panel" />
+      {metric !== 'raw' && (
+        <Tabs depth={`profile${id}`} label={t.scoreShown} views={[{ id: 'p-natural' }, { id: 'p-humanities' }]} value={`p-${profile}`} onChange={(v) => onProfile(v.slice(2))} controls="scores-panel" />
+      )}
+    </div>
+  );
+}
+
 // One card for every model, as the essay page's citation card: a raised plane that follows the
 // pointer. A tap shows it, a tap elsewhere hides it; keyboard focus shows it beside the mark.
-const CARDS = Object.fromEntries(BOARD.map((entry) => [entry.name, { ...entry, card: card(entry) }]));
+const CARDS = Object.fromEntries(BOARD.map((entry) => [entry.name, entry]));
 function useCard() {
   const [at, setAt] = useState(null);
   const place = (name, x, y) => setAt(name && CARDS[name] ? { name, x, y } : null);
@@ -470,7 +495,7 @@ function useCard() {
   return [at, handlers];
 }
 
-function Card({ at, t }) {
+function Card({ at, t, profile }) {
   const ref = useRef(null);
   const [pos, setPos] = useState({ left: -9999, top: -9999 });
   useLayoutEffect(() => {
@@ -484,7 +509,7 @@ function Card({ at, t }) {
   if (!at) return null;
   return (
     <div className="pop" role="tooltip" ref={ref} style={pos}>
-      <Tip entry={CARDS[at.name]} t={t} />
+      <Tip entry={CARDS[at.name]} t={t} profile={profile} />
     </div>
   );
 }
@@ -492,6 +517,14 @@ function Card({ at, t }) {
 export default function App() {
   const [cardAt, cardHandlers] = useCard();
   const [metric, setMetric] = useState('raw');
+  const [profile, setProfile] = useState('natural');
+  // 누백 exists for the science profile only; choosing the humanities profile leaves it.
+  const morphTo = (go) => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !document.startViewTransition) return go();
+    const m = document.startViewTransition(() => flushSync(go)); m.ready.catch(() => {}); m.finished.catch(() => {});
+  };
+  const chooseMetric = (id) => morphTo(() => { setMetric(id); if (id === 'cumulative') setProfile('natural'); });
+  const chooseProfile = (id) => morphTo(() => { setProfile(id); if (id !== 'natural' && metric === 'cumulative') setMetric('mean'); });
   const [path, setPath] = useState(['total']);
   const [locale, changeLocale] = useLocale();
   const t = TEXT[locale];
@@ -550,7 +583,7 @@ export default function App() {
                 )) : <p className="chart-metric-note"><T k={metric + 'Note'} />{metric === 'cumulative' && <> <a href="https://www.scribd.com/document/1070326852" target="_blank" rel="noopener noreferrer"><T k="cutoffs" /></a></>}</p>}
               </div>
               <div className="chart-side">
-                <Tabs depth="metric" label={t.scoreShown} views={metrics} value={metric} onChange={(id) => { const go = () => setMetric(id); if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !document.startViewTransition) go(); else { const m = document.startViewTransition(() => flushSync(go)); m.ready.catch(() => {}); m.finished.catch(() => {}); } }} controls="scores-panel" />
+                <MetricSwitch id="" metric={metric} profile={profile} onMetric={chooseMetric} onProfile={chooseProfile} t={t} />
                 <p className="chart-note">
                   {DARKER && (
                     <span className="chart-key">
@@ -565,15 +598,18 @@ export default function App() {
             <div role="tabpanel" id="scores-panel" aria-labelledby={`tab-metric-${metric}`}>
               {metric === 'raw'
                 ? <Chart view={view} entries={ranked(view)} t={t} />
-                : <Chart view={view} entries={metricEntries(metric)} t={t} full={metric === 'standard' ? Math.ceil(Math.max(...metricEntries(metric).map((e) => e.high)) / 50) * 50 : 100} name={t.views[metric]} />}
+                : <Chart view={view} entries={metricEntries(metric, profile)} t={t} full={metric === 'standard' ? Math.ceil(Math.max(...metricEntries(metric, profile).map((e) => e.high)) / 50) * 50 : 100} name={`${t.views[metric]} · ${t.views[`p-${profile}`]}`} />}
             </div>
           </section>
 
           <section className="detail" aria-labelledby="size-title" {...cardHandlers}>
             <figure className="chart" aria-labelledby="size-title">
+<div className="chart-head">
               <figcaption className="chart-title">
                 <h2 id="size-title"><T k="byGb" /></h2> <span className="chart-full"><T k="frontier" /></span>
               </figcaption>
+                <div className="chart-side"><MetricSwitch id="-gb" metric={metric} profile={profile} onMetric={chooseMetric} onProfile={chooseProfile} t={t} /></div>
+              </div>
               <ul className="legend" aria-label={t.families}>
                 {KEYS.map((key) => (
                   <li key={`${key.key} ${key.off}`}>
@@ -582,7 +618,7 @@ export default function App() {
                   </li>
                 ))}
               </ul>
-              <Field t={t} metric={metric} />
+              <Field t={t} metric={metric} profile={profile} />
             </figure>
           </section>
 
@@ -641,7 +677,7 @@ export default function App() {
         </main>
       </div>
 
-      <Card at={cardAt} t={t} />
+      <Card at={cardAt} t={t} profile={profile} />
 
       {/* The same footer as the home page. */}
       <footer className="site-footer">
