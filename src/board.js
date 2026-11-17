@@ -1,7 +1,6 @@
 // Written by the board generator from the graded results. Scores only.
-export const UPDATED = '2026-11-17';
+export const UPDATED = '2026-11-18';
 export const FULL = 450;
-export const OFF = 'no thinking';
 export const SUBJECTS = [{"name": "Korean", "full": 100}, {"name": "Math", "full": 100}, {"name": "English", "full": 100}, {"name": "History", "full": 50}, {"name": "Inquiry", "full": 100}];
 export const FAMILIES = [{"key": "gemma", "name": "Gemma 4"}, {"key": "bonsai", "name": "Ternary Bonsai 2"}, {"key": "nanbeige", "name": "Nanbeige4.2"}, {"key": "qwen", "name": "Qwen3.5"}, {"key": "kanana", "name": "Kanana-2"}, {"key": "lfm", "name": "LFM3"}];
 export const BOARD = [

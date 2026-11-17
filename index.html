@@ -19,6 +19,12 @@
     <link rel="icon" type="image/svg+xml" href="./src/assets/favicon.svg" />
     <link rel="stylesheet" href="./src/styles.css" />
     <script>
+      // The reader's language, before the first frame: the one chosen here before, else Korean for a
+      // browser that asks for Korean. The stylesheet shows that set of words.
+      try {
+        const chosen = localStorage.getItem('locale');
+        if (chosen === 'ko' || (!chosen && (navigator.language || '').toLowerCase().startsWith('ko'))) document.documentElement.lang = 'ko';
+      } catch {}
       // Arriving from the home page, whose row has grown into this plane: start as the bare plane.
       try {
         const arriving = performance.getEntriesByType('navigation')[0]?.type === 'navigate';

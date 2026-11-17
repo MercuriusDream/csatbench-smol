@@ -54,6 +54,6 @@ bun run build    # dist/, with the page's markup written into the HTML
 bun run preview  # dist/ served the way GitHub Pages serves it
 ```
 
-`src/board.js` holds the scores, and nothing else. `src/content.js` holds every word on the page; the build also writes them to `llms.txt`.
+`src/board.js` holds the scores, and nothing else. `src/content.js` holds every word on the page, in English and in Korean; the build also writes the English to `llms.txt`. The page opens in Korean for a browser that asks for Korean, and the chip at its top right changes the language.
 
 A push to `main` builds and deploys through `.github/workflows/deploy.yml`. The custom domain is set in the repository's Pages settings, and DNS has one record for it: `csat` as a CNAME to `mercuriusdream.github.io`.
