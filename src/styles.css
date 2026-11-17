@@ -279,6 +279,7 @@ button.chip:active {
   --series-kanana: light-dark(#e87ba4, #d55181);
   --series-lfm: light-dark(#008300, #0ca30c);
   --series-raon: light-dark(#6250d6, #9085e9);
+  --series-sensenova: light-dark(#e34948, #e66767);
 
   /* A row run with thinking off takes its family's colour a good step darker. On the dark plane the
      step is shorter, so the darker colour still stands clear of the plane. */
