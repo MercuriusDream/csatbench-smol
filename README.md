@@ -20,6 +20,25 @@ The harness is [hehee9/CSAT-benchmark](https://github.com/hehee9/CSAT-benchmark)
 - **Thinking.** A row marked "no thinking" ran with thinking switched off. Gemma 4 is on the board both ways.
 - **No answer.** A question that comes back without an answer is asked again. One still without an answer at the end is marked wrong, as CSAT-benchmark marks it.
 
+## Sizes
+
+The chart of totals by GB places each model at the size of its published weights:
+
+| Model | Weights | GB |
+| --- | --- | ---: |
+| Gemma 4 12B | Ollama `gemma4:12b-it-qat`, model and vision projector | 7.16 |
+| Gemma 4 E4B | Ollama `gemma4:e4b-it-qat`, model and vision projector | 6.14 |
+| Gemma 4 E2B | Ollama `gemma4:e2b-it-qat`, model and vision projector | 4.34 |
+| Ternary Bonsai 2 27B | `prism-ml/Ternary-Bonsai-2-27B-mlx-2bit` | 8.60 |
+| Ternary Bonsai 2 9B | `prism-ml/Ternary-Bonsai-2-9B-mlx-2bit` | 3.46 |
+| Nanbeige4.2 3B | `Nanbeige/Nanbeige4.2-3B-FP8` | 5.19 |
+| Qwen3.5 2B | Ollama `qwen3.5:2b-q4_K_M`, model and vision projector | 1.94 |
+| Kanana-2 1.3B | `kakaocorp/kanana-2-1.3b-instruct` | 2.58 |
+| LFM3 1.7B | `LiquidAI/LFM3-1.7B-MLX-8bit` | 1.84 |
+| LFM3-VL 2B | `LiquidAI/LFM3-VL-2B-MLX-4bit` | 1.59 |
+
+Under the sizes the chart names devices with that much memory: Galaxy Watch8 2 GB, iPhone 15 6 GB, iPhone 16 Pro 8 GB, Galaxy S26 12 GB, and the graphics memory of an RTX 5060 (8 GB), RTX 5070 (12 GB), RTX 5080 (16 GB), RTX 4090 (24 GB) and RTX 5090 (32 GB).
+
 ## What is not here
 
 The exam's text and figures are the work of KICE (한국교육과정평가원) and are not in this repository. Neither are the models' replies, which quote them. The papers and answer keys are published at [suneung.re.kr](https://www.suneung.re.kr/).

@@ -31,17 +31,21 @@ const shared = (a, b) =>
   Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
 
 // A spot for every name, for a plot of this width and height: the plot at its smallest. A name
-// keeps clear of the other dots, the other names, the line and the plot's edges. A wider plot only
+// keeps clear of the other dots (`also` holds those with no name), the other names, the line and
+// the plot's edges. A wider plot only
 // moves the dots further apart, so spots found here hold at every greater width.
-export function place(marks, { width, height }) {
-  const dots = marks.map((mark) => ({ x: mark.x * width, y: (1 - mark.y) * height }));
+export function place(marks, { width, height, also = [] }) {
+  const at = (mark) => ({ x: mark.x * width, y: (1 - mark.y) * height });
+  const dots = marks.map(at);
+  // Dots that carry no name of their own are still in the names' way.
+  const others = also.map(at);
   const widths = marks.map((mark) => mark.label.length * LETTER);
   const frame = [0, -LINE, width, height];
   const spots = marks.map(() => 'e');
   const boxes = marks.map((_, index) => box(dots[index], widths[index], 'e'));
 
   // The line, as a thin box for each of its steps.
-  const corners = path(marks).map(([x, y]) => [x * width, (1 - y) * height]);
+  const corners = path([...marks, ...also]).map(([x, y]) => [x * width, (1 - y) * height]);
   const line = corners.slice(1).map(([x, y], index) => {
     const [fromX, fromY] = corners[index];
     return [Math.min(fromX, x) - 3, Math.min(fromY, y) - 3, Math.max(fromX, x) + 3, Math.max(fromY, y) + 3];
@@ -52,6 +56,9 @@ export function place(marks, { width, height }) {
     let total = (area - shared(candidate, frame)) * 10;
     dots.forEach((dot, other) => {
       if (other !== index) total += shared(candidate, [dot.x - DOT, dot.y - DOT, dot.x + DOT, dot.y + DOT]) * 3;
+    });
+    others.forEach((dot) => {
+      total += shared(candidate, [dot.x - DOT, dot.y - DOT, dot.x + DOT, dot.y + DOT]) * 3;
     });
     boxes.forEach((placed, other) => {
       if (other !== index) total += shared(candidate, placed);

@@ -410,9 +410,10 @@ p {
   box-shadow: inset 0 0 0 var(--control-edge-width) var(--ink-boundary);
 }
 
-/* A chart. As written here it is a list for a narrow screen: each model's name and score on one
-   line and its bar under them, on a track that is the full marks. Where there is room, further
-   down, the same list stands up: models along the bottom, marks up the side. */
+/* A chart keeps one form on every screen: what is counted runs along the bottom, the score up the
+   side, with a line across at each mark. The marks' numbers stand in a gutter at the left and stay
+   there. Everything else is on a sheet, and where the screen is too narrow for the sheet it moves
+   sideways inside its own region. */
 .chart {
   display: grid;
   gap: var(--space-3);
@@ -426,175 +427,172 @@ p {
 }
 
 .chart-full,
-.bar-mode {
+.chart-note {
   color: var(--ink-2);
 }
 
-.scale {
-  display: none;
-}
-
-.bars {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.bar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+/* At the end of the tabs' row: what a darker bar is, and what the chart is out of. */
+.chart-note {
+  display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-1) var(--space-4);
 }
 
-.bar-value {
-  text-align: end;
-  font-variant-numeric: tabular-nums;
+.chart-key {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
 }
 
-.bar-track {
-  grid-column: 1 / -1;
-  height: 0.75rem;
-  border-radius: var(--radius);
-  background: var(--plane-raised);
-  box-shadow: inset 0 0 0 var(--control-edge-width) var(--ink-boundary);
-}
-
-.bar-fill {
-  display: block;
-  width: calc(var(--share) * 100%);
-  height: 100%;
-  border-radius: inherit;
-  background: var(--series);
-  box-shadow: inset 0 0 0 var(--control-edge-width) var(--ink-boundary);
-  view-transition-class: fill;
-}
-
-/* Room for the chart to stand up. Models go along the bottom with their names slanted under them,
-   so a name of any length fits a column of any width. Marks go up the side, with a line across at
-   each. A bar rises from the bottom line to its score, which is written on top of it. */
-@media (min-width: 64em) {
-  .plot {
-    --plot-height: 22rem;
-    --gutter: 2.25rem;
-    --value-room: 1.5rem;
-    /* The longest name, slanted: its length along the slope, and two lines of depth across it. */
-    --label-room: calc(var(--longest) * 0.4em + 3.5em);
-    position: relative;
-    padding: var(--value-room) 0 var(--label-room) var(--gutter);
-    font: var(--text-chart);
-  }
-
-  .scale {
-    position: absolute;
-    inset-inline: var(--gutter) 0;
-    top: var(--value-room);
-    display: block;
-    height: var(--plot-height);
-  }
-
-  .tick {
-    position: absolute;
-    inset-inline: 0;
-    bottom: calc(var(--at) * 100%);
-    border-top: 1px solid var(--line);
-  }
-
-  .tick-label {
-    position: absolute;
-    inset-inline-end: 100%;
-    top: 0;
-    padding-inline-end: var(--space-2);
-    color: var(--ink-2);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-    translate: 0 -50%;
-  }
-
-  .bars {
-    position: relative;
-    grid-template-columns: repeat(var(--count), minmax(0, 1fr));
-    gap: 0;
-    height: var(--plot-height);
-  }
-
-  .bar {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0;
-    height: 100%;
-  }
-
-  .bar-value {
-    order: 1;
-    padding-bottom: 0.1875rem;
-  }
-
-  .bar-track {
-    order: 2;
-    flex: none;
-    width: min(62%, 3.75rem);
-    height: calc(var(--share) * 100%);
-    border-radius: 0;
-    background: none;
-    box-shadow: none;
-  }
-
-  .bar-fill {
-    width: 100%;
-    border-radius: var(--radius) var(--radius) 0 0;
-  }
-
-  /* The name hangs from the foot of its bar and slants down to the left, so it ends under the
-     bar and reads up toward it. */
-  .bar-model {
-    position: absolute;
-    top: 100%;
-    inset-inline-end: 50%;
-    display: grid;
-    justify-items: end;
-    margin-top: var(--space-2);
-    white-space: nowrap;
-    transform: rotate(-45deg);
-    transform-origin: top right;
-  }
-}
-
-/* Totals against size, as dots. Size runs across, each line twice the one before; the total runs
-   up. A dot is a point with no size of its own, so its mark and its name hang from it. */
+.plot,
 .field {
   --gutter: 2.25rem;
+  display: grid;
+  grid-template-columns: var(--gutter) minmax(0, 1fr);
   font: var(--text-chart);
 }
 
-.field.wide {
-  display: none;
+.plot {
+  --plot-height: 22rem;
+  /* Two lines of numbers can stand over a bar. */
+  --value-room: 2.75rem;
 }
 
-.field-plot {
+.axis {
   position: relative;
-  height: var(--field-height);
-  margin: var(--space-5) 0 var(--space-6) var(--gutter);
+  height: var(--plot-height);
+  margin-top: var(--value-room);
 }
 
-.field .tick {
+.axis-label {
+  position: absolute;
+  inset-inline-end: var(--space-2);
+  bottom: calc(var(--at) * 100%);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  translate: 0 50%;
+}
+
+/* Wide enough, the sheet is the width it is given and its slanted names may reach out over the
+   gutter. The narrow case is further down. */
+.scroller {
+  min-width: 0;
+}
+
+.sheet {
+  position: relative;
+}
+
+/* Under the bars: room for the longest name, slanted. Its length along the slope, and a line's
+   depth across it. The sheet knows how long that name is. */
+.plot .sheet {
+  padding: var(--value-room) 0 calc(var(--longest) * 0.4em + 2.5em);
+}
+
+.scale {
+  position: absolute;
+  inset-inline: 0;
+  top: var(--value-room);
+  height: var(--plot-height);
+}
+
+.tick {
   position: absolute;
   inset-inline: 0;
   bottom: calc(var(--at) * 100%);
   border-top: 1px solid var(--line);
 }
 
-.field .tick-label {
+.bars {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--count), minmax(0, 1fr));
+  height: var(--plot-height);
+}
+
+/* One model. Its bar rises from the bottom line to its score. */
+.bar {
+  --bar-width: min(62%, 3.75rem);
+  position: relative;
+  height: 100%;
+}
+
+.bar-fill {
   position: absolute;
-  inset-inline-end: 100%;
-  top: 0;
-  padding-inline-end: var(--space-2);
-  color: var(--ink-2);
+  bottom: 0;
+  left: 50%;
+  width: var(--bar-width);
+  height: calc(var(--share) * 100%);
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--series);
+  box-shadow: inset 0 0 0 var(--control-edge-width) var(--ink-boundary);
+  translate: -50% 0;
+  view-transition-class: fill;
+}
+
+/* The same model with thinking off: a darker bar, half as wide, in front of its own. It is kept
+   narrower so that both scores show whichever is the higher, and a gap of the page's plane runs
+   round it. */
+.bar-front {
+  width: calc(var(--bar-width) * 0.5);
+  height: calc(var(--front) * 100%);
+  box-shadow:
+    -2px 0 0 var(--plane-base),
+    2px 0 0 var(--plane-base),
+    0 -2px 0 var(--plane-base);
+}
+
+/* The score stands over the higher of the two bars. The thinking-off score is the quieter line. */
+.bar-value {
+  position: absolute;
+  bottom: calc(max(var(--share), var(--front)) * 100% + 0.1875rem);
+  left: 50%;
+  display: grid;
+  justify-items: center;
   font-variant-numeric: tabular-nums;
+  line-height: 1.2;
   white-space: nowrap;
-  translate: 0 -50%;
+  translate: -50% 0;
+}
+
+.bar-value-off {
+  color: var(--ink-2);
+}
+
+/* The name hangs from the foot of its bar and slants down to the left, so it ends under the bar
+   and reads up toward it. A name of any length fits a column of any width. */
+.bar-model {
+  position: absolute;
+  top: 100%;
+  inset-inline-end: 50%;
+  margin-top: var(--space-2);
+  white-space: nowrap;
+  transform: rotate(-45deg);
+  transform-origin: top right;
+}
+
+/* Totals against the size of the weights, as dots. Size runs across, each octave the same width;
+   the total runs up. Under the plot stand the sizes, and under a size the devices that have that
+   much memory. */
+.field {
+  --field-height: 22rem;
+  --top-room: 1.25rem;
+}
+
+.field .axis {
+  height: var(--field-height);
+  margin-top: var(--top-room);
+}
+
+.field .sheet {
+  padding: var(--top-room) var(--space-4) 0 var(--space-2);
+}
+
+.field-plot {
+  position: relative;
+  height: var(--field-height);
 }
 
 .tick-size {
@@ -602,22 +600,6 @@ p {
   inset-block: 0;
   left: calc(var(--at) * 100%);
   border-inline-start: 1px solid var(--line);
-}
-
-.tick-size-label {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  padding-top: var(--space-1);
-  color: var(--ink-2);
-  white-space: nowrap;
-  translate: -50% 0;
-}
-
-.field-axis {
-  margin-inline-start: var(--gutter);
-  color: var(--ink-2);
-  text-align: center;
 }
 
 /* The line stretches with the plot and keeps its width. */
@@ -637,6 +619,7 @@ p {
   vector-effect: non-scaling-stroke;
 }
 
+/* A dot is a point with no size of its own, so its mark and its name hang from it. */
 .dot {
   position: absolute;
   left: calc(var(--x) * 100%);
@@ -658,6 +641,16 @@ p {
   outline: 2px solid var(--plane-base);
 }
 
+/* A model's two marks, with thinking and without, are joined: they are one model. */
+.twin-link {
+  position: absolute;
+  left: calc(var(--x) * 100%);
+  bottom: calc(var(--from) * 100%);
+  height: calc((var(--to) - var(--from)) * 100%);
+  border-inline-start: 2px solid var(--series);
+  translate: -1px 0;
+}
+
 /* A name goes where the build found room for it: beside its dot, above or below it, or at a corner. */
 .dot-name {
   position: absolute;
@@ -673,13 +666,66 @@ p {
 .dot[data-spot='nw'] .dot-name { right: 0.375rem; bottom: 0.375rem; }
 .dot[data-spot='sw'] .dot-name { right: 0.375rem; top: 0.375rem; }
 
-@media (min-width: 64em) {
-  .field.narrow {
-    display: none;
+/* The sizes under the plot. Each stands under its line. The devices with that much memory hang
+   under it, slanted as the bars' names are, one to a line. */
+.sizes {
+  position: relative;
+  height: calc(1.75em + var(--longest) * 0.4em + 3.5em);
+}
+
+.size {
+  position: absolute;
+  top: 0;
+  left: calc(var(--at) * 100%);
+}
+
+.size-gb {
+  position: absolute;
+  top: var(--space-1);
+  left: 0;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  translate: -50% 0;
+}
+
+.size-devices {
+  position: absolute;
+  top: 1.9em;
+  right: 0;
+  display: grid;
+  justify-items: end;
+  white-space: nowrap;
+  transform: rotate(-45deg);
+  transform-origin: top right;
+}
+
+.field-axis {
+  grid-column: 2;
+  color: var(--ink-2);
+}
+
+/* Too narrow for a sheet. It keeps the width it needs and moves sideways inside its region; the
+   numbers in the gutter stay. The bars' sheet starts with the room its first slanted name needs,
+   which on a wide screen lies over the gutter. */
+@media (max-width: 63.99em) {
+  .scroller {
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
   }
 
-  .field.wide {
-    display: block;
+  .scroller:focus-visible {
+    outline-offset: calc(var(--focus-width) * -1);
+  }
+
+  .plot .sheet {
+    min-width: calc(var(--lead) + var(--count) * 2.75rem);
+    padding-inline-start: var(--lead);
+  }
+
+  .field .sheet {
+    min-width: 40rem;
   }
 }
 
@@ -703,14 +749,14 @@ p {
 /* The board. Its planes hang outside the ink line, as the home page's rows do, so every name starts
    on the text's edge. One grid for the heads and for every entry keeps the numbers in their columns. */
 .board {
-  max-width: calc(48rem + var(--inset-control-compact) * 2);
+  max-width: calc(52rem + var(--inset-control-compact) * 2);
   margin-inline: calc(var(--inset-control-compact) * -1);
 }
 
 .board-head,
 .entry {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) repeat(5, var(--col-subject)) var(--col-total);
+  grid-template-columns: minmax(0, 1fr) repeat(6, var(--col-subject)) var(--col-total);
   align-items: center;
   column-gap: var(--space-2);
   padding: var(--space-2) var(--inset-control-compact);
@@ -865,7 +911,7 @@ p {
   filter: none;
 }
 
-/* Too narrow for the board's seven columns. The heads go, and each entry takes two lines: the model
+/* Too narrow for the board's eight columns. The heads go, and each entry takes two lines: the model
    and its total, then the five subjects, each with its name, as one line of text that wraps where
    it must. */
 @media (max-width: 56.25em) {
@@ -928,8 +974,7 @@ p {
    chart's lines take the text colour, and the family marks, which now say nothing, go. */
 @media (forced-colors: active) {
   .row,
-  .entry,
-  .bar-track {
+  .entry {
     border: 1px solid CanvasText;
   }
 
@@ -937,8 +982,16 @@ p {
     background: CanvasText;
   }
 
+  /* The darker bar in front is told from its own by an edge. */
+  .bar-front {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    box-shadow: none;
+  }
+
   .tick,
-  .tick-size {
+  .tick-size,
+  .twin-link {
     border-color: CanvasText;
   }
 
