@@ -789,19 +789,11 @@ p {
   color: var(--ink-2);
 }
 
-/* Why and how, side by side across the page's width. Where the page is too narrow for two
-   measures they stand one under the other. */
+/* Why, what follows, and how: plain paragraphs in one column across the page's width. */
 .words {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-  gap: var(--space-7) var(--space-8);
+  gap: var(--space-4);
   margin-top: var(--space-7);
-}
-
-.words section {
-  display: grid;
-  align-content: start;
-  gap: var(--space-3);
 }
 
 /* The board. Its planes hang outside the ink line, as the home page's rows do, so every name starts

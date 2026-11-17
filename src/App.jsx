@@ -602,12 +602,10 @@ export default function App() {
             </div>
           </section>
 
-          <section className="detail" aria-labelledby="size-title" {...cardHandlers}>
-            <figure className="chart" aria-labelledby="size-title">
+          <section className="detail" aria-label={t.byGb} {...cardHandlers}>
+            <figure className="chart" aria-label={t.byGb}>
 <div className="chart-head">
-              <figcaption className="chart-title">
-                <h2 id="size-title"><T k="byGb" /></h2> <span className="chart-full"><T k="frontier" /></span>
-              </figcaption>
+              
                 <div className="chart-side"><MetricSwitch id="-gb" metric={metric} profile={profile} onMetric={chooseMetric} onProfile={chooseProfile} t={t} /></div>
               </div>
               <ul className="legend" aria-label={t.families}>
@@ -642,38 +640,29 @@ export default function App() {
                 ))}
               </ol>
             </div>
-            <p className="aside">
-              {ROWS.some((row) => row.build === STARRED) && <><T k="starred" /> </>}
-              <T k="scale" /> <time dateTime={UPDATED}><T k="updated" a={UPDATED} /></time>
-            </p>
+            {ROWS.some((row) => row.build === STARRED) && <p className="aside"><T k="starred" /></p>}
           </section>
 
           <Admissions locale={locale} />
 
-          {/* Why and how stand side by side across the page's width. */}
-          <div className="words">
-            <section aria-labelledby="why-title">
-              <h2 id="why-title"><T k="whyTitle" /></h2>
-              <p><T k="why" /></p>
-            </section>
-
-            <section aria-labelledby="how-title">
-              <h2 id="how-title"><T k="howTitle" /></h2>
-              <p><T k="how" /></p>
-              <ul className="rows">
-                {LINKS.map((link) => (
-                  <li key={link.href}>
-                    <a className="row" href={link.href} target="_blank" rel="noopener noreferrer">
-                      <span className="row-text">
-                        <span className="row-name"><Ti k={link.key} i={0} /></span> <span className="row-detail"><Ti k={link.key} i={1} /></span>
-                      </span>
-                      <Arrow />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          </div>
+          {/* Why, what follows from the scores, and how: one column of plain text across the page's width. */}
+          <section className="words" aria-label={t.whyTitle}>
+            <p><T k="why" /></p>
+            <p><T k="urge" /></p>
+            <p><T k="how" /></p>
+            <ul className="rows">
+              {LINKS.map((link) => (
+                <li key={link.href}>
+                  <a className="row" href={link.href} target="_blank" rel="noopener noreferrer">
+                    <span className="row-text">
+                      <span className="row-name"><Ti k={link.key} i={0} /></span> <span className="row-detail"><Ti k={link.key} i={1} /></span>
+                    </span>
+                    <Arrow />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
         </main>
       </div>
 
