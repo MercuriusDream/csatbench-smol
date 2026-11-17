@@ -1341,3 +1341,97 @@ p {
 }
 .metric-track span:first-child { opacity: 0.35; }
 .metric-value { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* The metric switch stands at the right end of the chart's head, over the key. */
+.chart-side {
+  display: grid;
+  justify-items: end;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+.chart-metric-note {
+  max-width: 30rem;
+  color: var(--ink-2);
+}
+
+/* A value the conversions pin down only to a range: solid to its low end, faint to its high end. */
+.bar-fill[data-range] {
+  background: linear-gradient(to top,
+    var(--series) 0 calc(var(--solid) / var(--share) * 100%),
+    color-mix(in oklab, var(--series) 40%, transparent) calc(var(--solid) / var(--share) * 100%) 100%);
+}
+
+/* The card a pointer resting on a model shows. It hangs over the bar or the dot, above everything. */
+.bar:focus-visible,
+.dot:focus-visible {
+  outline: none;
+}
+
+.tip {
+  position: absolute;
+  bottom: calc(var(--share, var(--y, 0)) * 100% + 2.25rem);
+  left: 50%;
+  z-index: 10;
+  display: none;
+  gap: var(--space-1);
+  min-width: 14rem;
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  color: var(--ink-1);
+  background: var(--plane-raised);
+  box-shadow: 0 0 0 1px var(--line), 0 6px 24px oklch(0 0 0 / 0.25);
+  font: var(--text-chart);
+  white-space: nowrap;
+  translate: -50% 0;
+  pointer-events: none;
+}
+
+.dot .tip {
+  bottom: 0.75rem;
+}
+
+.bar:hover .tip,
+.bar:focus-visible .tip,
+.dot:hover .tip,
+.dot:focus-visible .tip {
+  display: grid;
+}
+
+.bar:hover,
+.dot:hover,
+.bar:focus-visible,
+.dot:focus-visible {
+  z-index: 10;
+}
+
+.tip-name {
+  font-weight: 500;
+}
+
+.tip-detail {
+  color: var(--ink-2);
+}
+
+.tip-rows {
+  display: grid;
+  gap: 2px;
+  margin-block: var(--space-1);
+}
+
+.tip-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--space-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.tip-off {
+  color: var(--ink-2);
+}
+
+@media (forced-colors: active) {
+  .tip {
+    border: 1px solid CanvasText;
+  }
+}

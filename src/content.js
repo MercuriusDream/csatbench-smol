@@ -19,7 +19,7 @@ export const TEXT = {
     subjects: ['Korean', 'Math', 'English', 'History', 'Inquiry'],
     views: {
       raw: 'Raw score', standard: 'Standard score', mean: 'Mean percentile', cumulative: 'Top %',
-      total: 'Total', korean: 'Korean', math: 'Math', english: 'English', history: 'History', inquiry: 'Inquiry', all: 'All',
+      total: 'All', korean: 'Korean', math: 'Math', english: 'English', history: 'History', inquiry: 'Inquiry', all: 'All',
       'korean-common': 'Common', 'korean-speech': 'Speech and Writing', 'korean-language': 'Language and Media',
       'math-common': 'Common', 'math-probability': 'Probability and Statistics', 'math-calculus': 'Calculus', 'math-geometry': 'Geometry',
       science: 'Science', humanities: 'Humanities',
@@ -73,7 +73,7 @@ export const TEXT = {
     subjects: ['국어', '수학', '영어', '한국사', '탐구'],
     views: {
       raw: '원점수', standard: '표점', mean: '평백', cumulative: '누백',
-      total: '총점', korean: '국어', math: '수학', english: '영어', history: '한국사', inquiry: '탐구', all: '전체',
+      total: '전체', korean: '국어', math: '수학', english: '영어', history: '한국사', inquiry: '탐구', all: '전체',
       'korean-common': '공통', 'korean-speech': '화법과 작문', 'korean-language': '언어와 매체',
       'math-common': '공통', 'math-probability': '확률과 통계', 'math-calculus': '미적분', 'math-geometry': '기하',
       science: '과학탐구', humanities: '사회탐구',

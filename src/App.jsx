@@ -5,7 +5,7 @@ import {
   BOARD, DEVICES, FAMILIES, FULL, HOME, LINKS, LOCALES, MARK, ROWS, SIZE_TICKS, STARRED, SUBJECTS, TEXT, TREE, UPDATED,
   points, size, sizeAt, ticks,
 } from './content.js';
-import { convertedRows } from './converted.js';
+import { METRICS, card, metricOf } from './converted.js';
 import { place, steps } from './field.js';
 import { leaveTo } from './veil.js';
 
@@ -91,10 +91,10 @@ const ranked = (view) =>
   BOARD.flatMap((entry) => {
     const own = view.pick(entry);
     const front = entry.off ? view.pick(entry.off) : null;
-    if (Number.isFinite(own)) return [{ ...entry, value: own, front: Number.isFinite(front) ? front : null }];
+    if (Number.isFinite(own)) return [{ ...entry, card: card(entry), value: own, front: Number.isFinite(front) ? front : null }];
     // An add-on paper may be finished only in the thinking-off run so far. Show that score as
     // one darker bar instead of dropping it because the thinking-on run has not reached it yet.
-    if (Number.isFinite(front)) return [{ ...entry, value: front, front: null, offOnly: true }];
+    if (Number.isFinite(front)) return [{ ...entry, card: card(entry), value: front, front: null, offOnly: true }];
     return [];
   })
     .sort((a, b) => b.value - a.value);
@@ -174,6 +174,40 @@ function Tabs({ label, views, value, onChange, controls, depth }) {
   );
 }
 
+// The board's models with one metric's whole-exam value, best first (smallest first for 누백,
+// where smaller is better). A value pinned down only to a range is drawn solid to its low end and
+// faint to its high end.
+const metricEntries = (metric) =>
+  BOARD.flatMap((entry) => {
+    const own = metricOf(entry, false, metric);
+    const off = entry.off ? metricOf(entry, true, metric) : null;
+    const base = { ...entry, card: card(entry) };
+    if (own) return [{ ...base, value: own.low, high: own.high, label: own.label, front: off ? off.low : null, frontHigh: off ? off.high : null, frontLabel: off ? off.label : null }];
+    if (off) return [{ ...base, value: off.low, high: off.high, label: off.label, front: null, offOnly: true }];
+    return [];
+  }).sort((a, b) => (metric === 'cumulative' ? a.value - b.value : b.value - a.value));
+
+// What a pointer resting on a model shows: its build and size, and its whole-exam score in every
+// metric, with thinking and without.
+function Tip({ entry, t }) {
+  return (
+    <span className="tip" role="tooltip">
+      <span className="tip-name">{entry.name}</span>
+      <span className="tip-detail">{[entry.build, `${size(entry.gb)} GB`].filter(Boolean).join(' · ')}</span>
+      <span className="tip-rows">
+        {entry.card.map(({ metric, own, off }) => (own || off) && (
+          <span className="tip-row" key={metric}>
+            <span className="tip-label">{t.views[metric]}</span>
+            <span className="tip-value">{own ? own.label : '—'}</span>
+            {entry.off && <span className="tip-value tip-off">{off ? off.label : '—'}</span>}
+          </span>
+        ))}
+      </span>
+      {entry.off && <span className="tip-detail"><span className="swatch" style={series(entry.family, true)} aria-hidden="true" /> {t.off}</span>}
+    </span>
+  );
+}
+
 // The chart: models along the bottom, marks up the side, one bar for each model with its score
 // over it. A model also run with thinking off carries that score on the same bar, in the darker
 // colour: the two scores are two heights of one bar.
@@ -181,23 +215,23 @@ function Tabs({ label, views, value, onChange, controls, depth }) {
 // `lead` is the room the names need to the left of the first bar when the sheet moves sideways and
 // nothing may reach outside it: a name runs 0.4em to the left for each letter, from the middle of
 // its column, and a column is then 3.25rem wide. Both in rem, at the chart's text size of 0.875rem.
-function Chart({ view, entries, t }) {
+function Chart({ view, entries, t, full = view.full, name: chartName = t.views[view.id] }) {
   const [region, sideways] = useSideways();
   const longest = Math.max(0, ...entries.map((entry) => entry.name.length));
   const lead = Math.max(0, ...entries.map((entry, index) => entry.name.length * 0.4 * 0.875 - (index + 0.5) * 3.25));
   return (
-    <figure className="chart" aria-label={`${t.views[view.id]}, ${t.outOf(view.full)}`}>
+    <figure className="chart" aria-label={chartName}>
       <div className="plot">
         <div className="axis" aria-hidden="true">
-          {ticks(view.full).map((line) => (
-            <span className="axis-label" key={line} style={{ '--at': line / view.full }}>{line}</span>
+          {ticks(full).map((line) => (
+            <span className="axis-label" key={line} style={{ '--at': line / full }}>{line}</span>
           ))}
         </div>
-        <div className="scroller" ref={region} {...sideways(t.sideways(t.views[view.id]))}>
+        <div className="scroller" ref={region} {...sideways(t.sideways(chartName))}>
           <div className="sheet" style={{ '--count': entries.length, '--longest': longest, '--lead': `${lead.toFixed(3)}rem` }}>
             <div className="scale" aria-hidden="true">
-              {ticks(view.full).map((line) => (
-                <span className="tick" key={line} style={{ '--at': line / view.full }} />
+              {ticks(full).map((line) => (
+                <span className="tick" key={line} style={{ '--at': line / full }} />
               ))}
             </div>
             <ol className="bars">
@@ -213,23 +247,25 @@ function Chart({ view, entries, t }) {
                     className="bar"
                     key={name}
                     data-front={both ? (offInFront ? 'off' : 'own') : undefined}
-                    style={{ ...series(entry.family, entry.offOnly), '--share': entry.value / view.full, '--front': both ? entry.front / view.full : 0 }}
+                    tabIndex={0}
+                    style={{ ...series(entry.family, entry.offOnly), '--share': Math.max(entry.value, entry.high ?? entry.value) / full, '--solid': entry.value / full, '--front': both ? entry.front / full : 0 }}
                   >
                     <span className="bar-model" style={{ viewTransitionName: `name-${name}` }}>{entry.name}</span>
                     <span className={ownInFront ? 'bar-value inside' : 'bar-value'} style={{ viewTransitionName: `value-${name}` }}>
                       {entry.offOnly && <span className="visually-hidden"><T k="off" /> </span>}
-                      {points(entry.value)}
+                      {entry.label ?? points(entry.value)}
                     </span>
                     {both && (
                       <span className={offInFront ? 'bar-value off inside' : 'bar-value off'} style={{ viewTransitionName: `off-${name}` }}>
                         <span className="visually-hidden"><T k="off" /> </span>
-                        {points(entry.front)}
+                        {entry.frontLabel ?? points(entry.front)}
                       </span>
                     )}
-                    <span className="bar-fill" aria-hidden="true" style={{ viewTransitionName: `fill-${name}` }} />
+                    <span className="bar-fill" aria-hidden="true" data-range={entry.high > entry.value || undefined} style={{ viewTransitionName: `fill-${name}` }} />
                     {both && (
                       <span className="bar-fill bar-off" aria-hidden="true" style={{ ...series(entry.family, true), viewTransitionName: `front-${name}` }} />
                     )}
+                    {entry.card && <Tip entry={entry} t={t} />}
                   </li>
                 );
               })}
@@ -241,54 +277,37 @@ function Chart({ view, entries, t }) {
   );
 }
 
-const metrics = ['raw', 'standard', 'mean', 'cumulative'].map(id => ({ id }));
+const metrics = METRICS.map((id) => ({ id }));
 
-function ConvertedChart({ metric, t }) {
-  const entries = convertedRows(metric);
-  const scale = metric === 'standard' ? Math.ceil(Math.max(...entries.map(row => row.high)) / 50) * 50 : 100;
-  return (
-    <figure className="converted" aria-label={t.views[metric]}>
-      <figcaption className="aside">
-        <T k={metric + 'Note'} />{' '}
-        {metric === 'cumulative' && <a href="https://www.scribd.com/document/1070326852"><T k="cutoffs" /></a>}
-      </figcaption>
-      <ol>
-        {entries.map(row => (
-          <li key={row.name + row.off} style={series(row.family, row.off)}>
-            <span>{row.name} {row.off && <T k="off" />}</span>
-            <span className="metric-track" aria-hidden="true">
-              <span style={{ width: `${row.high / scale * 100}%` }} />
-              <span style={{ width: `${row.low / scale * 100}%` }} />
-            </span>
-            <span className="metric-value">{row.label}</span>
-          </li>
-        ))}
-      </ol>
-    </figure>
-  );
-}
-
-// The dots' own scale for the total. A dot shows a place, not a length, so its scale need not
-// start at nothing: it starts a little under the lowest total, on a round number, and the dots
-// get the room to stand apart.
-const LOWEST = Math.min(...BOARD.flatMap((entry) => (entry.off ? [entry.total, entry.off.total] : [entry.total])));
-const LOW = Math.floor((LOWEST - 10) / 50) * 50;
-const FIELD_TICKS = Array.from({ length: (FULL - LOW) / 50 + 1 }, (_, index) => LOW + index * 50);
-const up = (total) => (total - LOW) / (FULL - LOW);
-
-// Each model as a mark: the size of its weights across, its total up. A model also run with
-// thinking off has a second, darker mark straight under or over the first, joined to it.
-const MARKS = BOARD.map((entry) => ({ ...entry, x: sizeAt(entry.gb), y: up(entry.total), label: entry.name }));
-const TWINS = MARKS.filter((mark) => mark.off).map((mark) => ({ ...mark, y: up(mark.off.total), main: mark.y }));
-// Where each name goes, found for the plot at its narrowest: 40rem across, 22rem high.
-const SPOTS = place(MARKS, { width: 640, height: 352, also: TWINS });
-const LINE = steps([...MARKS, ...TWINS]);
+// The dots' scale for a metric. A dot shows a place, not a length, so the scale need not start at
+// nothing: it starts a little under the lowest value, on a round number. For 누백, where smaller
+// is better, the scale is turned over so that better is still up.
 const LONGEST_DEVICE = Math.max(...DEVICES.map((device) => device.name.length));
+function fieldOf(metric) {
+  const rows = BOARD.map((entry) => ({ entry, own: metricOf(entry, false, metric), off: entry.off ? metricOf(entry, true, metric) : null }));
+  const values = rows.flatMap((row) => [row.own?.low, row.off?.low]).filter(Number.isFinite);
+  let lo; let hi; let step; let up;
+  if (metric === 'cumulative') {
+    hi = 0; lo = Math.min(100, Math.ceil((Math.max(...values) + 5) / 10) * 10); step = lo <= 50 ? 10 : 20;
+    up = (v) => (lo - v) / (lo - hi);
+  } else {
+    hi = metric === 'raw' ? FULL : metric === 'mean' ? 100 : Math.ceil(Math.max(...rows.flatMap((row) => [row.own?.high, row.off?.high]).filter(Number.isFinite)) / 25) * 25;
+    step = metric === 'mean' ? 10 : metric === 'raw' ? 50 : 25;
+    lo = Math.floor((Math.min(...values) - step / 5) / step) * step;
+    up = (v) => (v - lo) / (hi - lo);
+  }
+  const lines = [];
+  for (let v = Math.min(lo, hi); v <= Math.max(lo, hi) + 1e-9; v += step) lines.push(v);
+  const marks = rows.filter((row) => row.own).map((row) => ({ ...row.entry, card: card(row.entry), x: sizeAt(row.entry.gb), y: up(row.own.low), label: row.entry.name, shown: row.own.label }));
+  const twins = rows.filter((row) => row.own && row.off).map((row) => ({ ...row.entry, x: sizeAt(row.entry.gb), y: up(row.off.low), main: up(row.own.low), shown: row.off.label }));
+  return { lines, up, marks, twins, spots: place(marks, { width: 640, height: 352, also: twins }), line: steps([...marks, ...twins]) };
+}
 
 // Totals against the size of the weights, as dots, with the devices that have that much memory
 // named under the sizes.
-function Field({ t }) {
+function Field({ t, metric }) {
   const [region, sideways] = useSideways();
+  const { lines: FIELD_TICKS, up, marks: MARKS, twins: TWINS, spots: SPOTS, line: LINE } = fieldOf(metric);
   return (
     <div className="field">
       <div className="axis" aria-hidden="true">
@@ -319,16 +338,17 @@ function Field({ t }) {
             </div>
             <ol className="dots">
               {MARKS.map((mark, index) => (
-                <li className="dot" key={mark.name} data-spot={SPOTS[index]} style={{ ...series(mark.family), '--x': mark.x, '--y': mark.y }}>
+                <li className="dot" key={mark.name} tabIndex={0} data-spot={SPOTS[index]} style={{ ...series(mark.family), '--x': mark.x, '--y': mark.y }}>
                   <span className="dot-name">
                     {mark.name}
-                    <span className="visually-hidden">, {size(mark.gb)} GB, {points(mark.total)}</span>
+                    <span className="visually-hidden">, {size(mark.gb)} GB, {mark.shown}</span>
                   </span>
+                  <Tip entry={mark} t={t} />
                 </li>
               ))}
               {TWINS.map((twin) => (
                 <li className="dot" key={`${twin.name} off`} style={{ ...series(twin.family, true), '--x': twin.x, '--y': twin.y }}>
-                  <span className="visually-hidden">{twin.name} <T k="off" />, {size(twin.gb)} GB, {points(twin.off.total)}</span>
+                  <span className="visually-hidden">{twin.name} <T k="off" />, {size(twin.gb)} GB, {twin.shown}</span>
                 </li>
               ))}
             </ol>
@@ -470,8 +490,7 @@ export default function App() {
             <h2 className="visually-hidden" id="scores-title"><T k="scores" /></h2>
             <div className="chart-head">
               <div className="tab-rows">
-                <Tabs depth="metric" label={t.scoreShown} views={metrics} value={metric} onChange={setMetric} controls="scores-panel" />
-                {metric === 'raw' && rows.map(({ depth, parent, nodes, chosen }) => (
+                {metric === 'raw' ? rows.map(({ depth, parent, nodes, chosen }) => (
                   <Tabs
                     key={depth}
                     depth={depth}
@@ -481,20 +500,25 @@ export default function App() {
                     onChange={(id) => show(id === 'all' ? path.slice(0, depth) : [...path.slice(0, depth), id])}
                     controls="scores-panel"
                   />
-                ))}
+                )) : <p className="chart-metric-note"><T k={metric + 'Note'} />{metric === 'cumulative' && <> <a href="https://www.scribd.com/document/1070326852" target="_blank" rel="noopener noreferrer"><T k="cutoffs" /></a></>}</p>}
               </div>
-              {metric === 'raw' && <p className="chart-note">
-                {DARKER && (
-                  <span className="chart-key">
-                    <span className="swatch" style={series(DARKER.key, true)} aria-hidden="true" />
-                    <span><T k="off" /></span>
-                  </span>
-                )}
-                <span><T k="outOf" a={view.full} /></span>
-              </p>}
+              <div className="chart-side">
+                <Tabs depth="metric" label={t.scoreShown} views={metrics} value={metric} onChange={(id) => { const go = () => setMetric(id); if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !document.startViewTransition) go(); else { const m = document.startViewTransition(() => flushSync(go)); m.ready.catch(() => {}); m.finished.catch(() => {}); } }} controls="scores-panel" />
+                <p className="chart-note">
+                  {DARKER && (
+                    <span className="chart-key">
+                      <span className="swatch" style={series(DARKER.key, true)} aria-hidden="true" />
+                      <span><T k="off" /></span>
+                    </span>
+                  )}
+                  {metric === 'raw' && <span><T k="outOf" a={view.full} /></span>}
+                </p>
+              </div>
             </div>
-            <div role="tabpanel" id="scores-panel" aria-labelledby={metric !== 'raw' ? `tab-metric-${metric}` : `tab-${last.depth}-${last.chosen ? last.chosen.id : 'all'}`}>
-              {metric === 'raw' ? <Chart view={view} entries={ranked(view)} t={t} /> : <ConvertedChart metric={metric} t={t} />}
+            <div role="tabpanel" id="scores-panel" aria-labelledby={`tab-metric-${metric}`}>
+              {metric === 'raw'
+                ? <Chart view={view} entries={ranked(view)} t={t} />
+                : <Chart view={view} entries={metricEntries(metric)} t={t} full={metric === 'standard' ? Math.ceil(Math.max(...metricEntries(metric).map((e) => e.high)) / 50) * 50 : 100} name={t.views[metric]} />}
             </div>
           </section>
 
@@ -511,7 +535,7 @@ export default function App() {
                   </li>
                 ))}
               </ul>
-              <Field t={t} />
+              <Field t={t} metric={metric} />
             </figure>
           </section>
 

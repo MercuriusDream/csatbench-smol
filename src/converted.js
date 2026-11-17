@@ -58,3 +58,19 @@ export function convertedRows(metric) {
     ? a.low - b.low || a.high - b.high
     : b.low - a.low || b.high - a.high);
 }
+
+// One run's converted score for a metric: { low, high, label }, or null where the run has none.
+// A range means the published conversions do not pin the value down; it is never averaged.
+export function metricOf(entry, off, metric) {
+  if (metric === 'raw') {
+    const total = off ? entry.off?.total : entry.total;
+    return Number.isFinite(total) ? { low: total, high: total, label: points(total) } : null;
+  }
+  return converted(entry, off, metric)[0] ?? null;
+}
+
+// Every metric for one model, its own run and its thinking-off run, for the hover card.
+export const METRICS = ['raw', 'standard', 'mean', 'cumulative'];
+export function card(entry) {
+  return METRICS.map((metric) => ({ metric, own: metricOf(entry, false, metric), off: entry.off ? metricOf(entry, true, metric) : null }));
+}
