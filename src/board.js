@@ -208,10 +208,10 @@ export const BOARD = [
     "build": "8-bit",
     "family": "lfm",
     "gb": 1.84,
-    "total": 261.2,
+    "total": 262.5,
     "subjects": [
       45.0,
-      86.7,
+      88.0,
       76,
       18,
       35.5
@@ -223,7 +223,7 @@ export const BOARD = [
       "math-common": 66,
       "math-geometry": 22,
       "math-calculus": 18,
-      "math-probability": 22,
+      "math-probability": 26,
       "english": 76,
       "physics1": 17,
       "socioculture": 17,
@@ -318,6 +318,36 @@ export const BOARD = [
     "off": null
   },
   {
+    "name": "LFM3-VL 2B",
+    "build": "4-bit",
+    "family": "lfm",
+    "gb": 1.59,
+    "total": 233.5,
+    "subjects": [
+      35.0,
+      79.0,
+      81,
+      30,
+      8.5
+    ],
+    "papers": {
+      "korean-common": 25,
+      "korean-language": 12,
+      "korean-speech": 8,
+      "math-common": 62,
+      "math-geometry": 18,
+      "math-calculus": 15,
+      "math-probability": 18,
+      "english": 81,
+      "physics1": 6,
+      "socioculture": 9,
+      "biology1": 0,
+      "chemistry1": 2,
+      "history": 30
+    },
+    "off": null
+  },
+  {
     "name": "Kanana-2 1.3B",
     "build": "BF16",
     "family": "kanana",
@@ -344,36 +374,6 @@ export const BOARD = [
       "biology1": 19,
       "chemistry1": 8,
       "history": 30
-    },
-    "off": null
-  },
-  {
-    "name": "LFM3-VL 2B",
-    "build": "4-bit",
-    "family": "lfm",
-    "gb": 1.59,
-    "total": 177.0,
-    "subjects": [
-      16.5,
-      59.0,
-      75,
-      21,
-      5.5
-    ],
-    "papers": {
-      "korean-common": 12,
-      "korean-language": 5,
-      "korean-speech": 4,
-      "math-common": 47,
-      "math-geometry": 11,
-      "math-calculus": 11,
-      "math-probability": 14,
-      "english": 75,
-      "physics1": 0,
-      "socioculture": 9,
-      "biology1": 0,
-      "chemistry1": 2,
-      "history": 21
     },
     "off": null
   },
