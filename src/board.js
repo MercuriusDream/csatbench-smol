@@ -2,7 +2,7 @@
 export const UPDATED = '2026-11-17';
 export const FULL = 450;
 export const SUBJECTS = [{"name": "Korean", "full": 100}, {"name": "Math", "full": 100}, {"name": "English", "full": 100}, {"name": "History", "full": 50}, {"name": "Inquiry", "full": 100}];
-export const FAMILIES = [{"key": "gemma", "name": "Gemma 4"}, {"key": "bonsai", "name": "Ternary Bonsai 2"}, {"key": "nanbeige", "name": "Nanbeige4.2"}, {"key": "qwen", "name": "Qwen3.5"}, {"key": "kanana", "name": "Kanana-2"}];
+export const FAMILIES = [{"key": "gemma", "name": "Gemma 4"}, {"key": "bonsai", "name": "Ternary Bonsai 2"}, {"key": "nanbeige", "name": "Nanbeige4.2"}, {"key": "qwen", "name": "Qwen3.5"}, {"key": "kanana", "name": "Kanana-2"}, {"key": "lfm", "name": "LFM3"}];
 export const BOARD = [
   {
     "name": "Gemma 4 12B",
@@ -110,6 +110,21 @@ export const BOARD = [
     ]
   },
   {
+    "name": "LFM3 1.7B",
+    "build": "8-bit",
+    "mode": "",
+    "family": "lfm",
+    "size": 1.7,
+    "total": 261.2,
+    "subjects": [
+      45.0,
+      86.7,
+      76,
+      18,
+      35.5
+    ]
+  },
+  {
     "name": "Gemma 4 E2B",
     "build": "QAT 4-bit",
     "mode": "",
@@ -167,6 +182,21 @@ export const BOARD = [
       58,
       30,
       29.5
+    ]
+  },
+  {
+    "name": "LFM3-VL 2B",
+    "build": "4-bit",
+    "mode": "",
+    "family": "lfm",
+    "size": 2,
+    "total": 177.0,
+    "subjects": [
+      16.5,
+      59.0,
+      75,
+      21,
+      5.5
     ]
   }
 ];

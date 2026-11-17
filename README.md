@@ -12,10 +12,10 @@ The defences proposed against AI in the exam hall work on the network: jamming, 
 
 The harness is [hehee9/CSAT-benchmark](https://github.com/hehee9/CSAT-benchmark), at commit `b55e2c0`. Questions are asked, answers are read out of the replies, and the answers are graded and totalled with its code.
 
-- **One question per request.** This is CSAT-benchmark's 쉬움 mode (`--easy`). A request holds one question, the passage it belongs to, and its figure if it has one.
+- **One question per request.** This is CSAT-benchmark's 쉬움 mode (`--easy`).
 - **The whole exam.** 13 papers, 247 questions: 국어 (공통, 화법과 작문, 언어와 매체), 수학 (공통, 확률과 통계, 미적분, 기하), 영어, 한국사, and four 탐구 papers (물리학Ⅰ, 화학Ⅰ, 생명과학Ⅰ, 사회·문화).
 - **Total out of 450**, by CSAT-benchmark's formula. 국어 and 수학 are each the common part plus the mean of the electives, out of 100. 영어 is out of 100 and 한국사 out of 50. 탐구 is the mean of the four papers times two, out of 100.
-- **Sampling is the model's own.** Each model runs with the settings its repository or its vendor gives. Nothing is added.
+- **Sampling is the model's own**: the settings its repository, its vendor or its server gives.
 - **No cap on an answer's length** other than the model's own or its server's.
 - **Thinking.** A row marked "no thinking" ran with thinking switched off. Gemma 4 is on the board both ways.
 - **No answer.** A question that comes back without an answer is asked again. One still without an answer at the end is marked wrong, as CSAT-benchmark marks it.
