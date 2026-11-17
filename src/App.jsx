@@ -189,34 +189,32 @@ const metricEntries = (metric, profile) =>
 
 // What a pointer resting on a model shows: its build and size, and its whole-exam score in every
 // metric, with thinking and without.
-function Tip({ entry, t, profile }) {
-  const rows = card(entry, profile);
-  const lines = [[false, feasible(entry, false, profile)], ...(entry.off ? [[true, feasible(entry, true, profile)]] : [])];
+function Tip({ entry, t, profile, off }) {
+  const rows = card(entry, profile).map(({ metric, own, off: o }) => ({ metric, value: off ? o : own })).filter((row) => row.value);
+  const lines = feasible(entry, off, profile);
   return (
     <span className="tip">
-      <span className="tip-name">{entry.name}</span>
+      <span className="tip-name">{entry.name}{off && <span className="tip-off"> {t.off}</span>}</span>
       <span className="tip-detail">{[entry.build, `${size(entry.gb)} GB`, t.views[`p-${profile}`]].filter(Boolean).join(' · ')}</span>
       <span className="tip-rows">
-        {rows.map(({ metric, own, off }) => (own || off) && (
+        {rows.map(({ metric, value }) => (
           <span className="tip-row" key={metric}>
             <span className="tip-label">{t.views[metric]}</span>
-            <span className="tip-value">{own ? own.label : '—'}</span>
-            {entry.off && <span className="tip-value tip-off">{off ? off.label : '—'}</span>}
+            <span className="tip-value">{value.label}</span>
           </span>
         ))}
       </span>
-      {lines.some(([, list]) => list.length) && <span className="tip-detail">{t.top3}</span>}
-      {lines.map(([off, list]) => list.length > 0 && (
-        <span className="tip-lines" key={String(off)}>
-          {off && <span className="tip-detail">{t.top3Off}</span>}
-          {list.map((line) => (
+      {lines.length > 0 && <span className="tip-detail">{t.top3}</span>}
+      {lines.length > 0 && (
+        <span className="tip-lines">
+          {lines.map((line) => (
             <span className="tip-row" key={line.id}>
               <span className="tip-label">{line.university} {line.unit}</span>
               <span className="tip-value">{line.value}</span>
             </span>
           ))}
         </span>
-      ))}
+      )}
     </span>
   );
 }
@@ -260,6 +258,7 @@ function Chart({ view, entries, t, full = view.full, name: chartName = t.views[v
                     className="bar"
                     key={name}
                     data-card={entry.name}
+                    data-offonly={entry.offOnly ? '' : undefined}
                     data-front={both ? (offInFront ? 'off' : 'own') : undefined}
                     tabIndex={0}
                     style={{ ...series(entry.family, entry.offOnly), '--share': Math.max(entry.value, entry.high ?? entry.value) / full, '--solid': entry.value / full, '--front': both ? entry.front / full : 0 }}
@@ -277,7 +276,7 @@ function Chart({ view, entries, t, full = view.full, name: chartName = t.views[v
                     )}
                     <span className="bar-fill" aria-hidden="true" data-range={entry.high > entry.value || undefined} style={{ viewTransitionName: `fill-${name}` }} />
                     {both && (
-                      <span className="bar-fill bar-off" aria-hidden="true" style={{ ...series(entry.family, true), viewTransitionName: `front-${name}` }} />
+                      <span className="bar-fill bar-off" data-off="" aria-hidden="true" style={{ ...series(entry.family, true), viewTransitionName: `front-${name}` }} />
                     )}
                   </li>
                 );
@@ -359,7 +358,7 @@ function Field({ t, metric, profile }) {
                 </li>
               ))}
               {TWINS.map((twin) => (
-                <li className="dot" key={`${twin.name} off`} style={{ ...series(twin.family, true), '--x': twin.x, '--y': twin.y }}>
+                <li className="dot" key={`${twin.name} off`} data-card={twin.name} data-off="" style={{ ...series(twin.family, true), '--x': twin.x, '--y': twin.y }}>
                   <span className="visually-hidden">{twin.name} <T k="off" />, {size(twin.gb)} GB, {twin.shown}</span>
                 </li>
               ))}
@@ -472,18 +471,21 @@ function MetricSwitch({ id, metric, profile, onMetric, onProfile, t }) {
 const CARDS = Object.fromEntries(BOARD.map((entry) => [entry.name, entry]));
 function useCard() {
   const [at, setAt] = useState(null);
-  const place = (name, x, y) => setAt(name && CARDS[name] ? { name, x, y } : null);
+  const place = (name, x, y, off) => setAt(name && CARDS[name] ? { name, x, y, off } : null);
   const handlers = {
     onPointerMove: (event) => {
       const mark = event.target.closest?.('[data-card]');
-      place(mark?.dataset.card, event.clientX, event.clientY);
+      // Over the darker part of a bar, or the darker dot, the card is for the thinking-off run; a
+      // run shown only in its thinking-off score is that run wherever the pointer is on it.
+      const off = Boolean(event.target.closest?.('[data-off]')) || mark?.dataset.offonly === '';
+      place(mark?.dataset.card, event.clientX, event.clientY, off);
     },
     onPointerLeave: (event) => event.pointerType === 'mouse' && setAt(null),
     onFocus: (event) => {
       const mark = event.target.closest?.('[data-card]');
       if (!mark) return;
       const box = mark.getBoundingClientRect();
-      place(mark.dataset.card, box.left + box.width / 2, box.top);
+      place(mark.dataset.card, box.left + box.width / 2, box.top, mark.dataset.offonly === '' || mark.dataset.off === '');
     },
     onBlur: () => setAt(null),
   };
@@ -509,7 +511,7 @@ function Card({ at, t, profile }) {
   if (!at) return null;
   return (
     <div className="pop" role="tooltip" ref={ref} style={pos}>
-      <Tip entry={CARDS[at.name]} t={t} profile={profile} />
+      <Tip entry={CARDS[at.name]} t={t} profile={profile} off={Boolean(at.off)} />
     </div>
   );
 }
