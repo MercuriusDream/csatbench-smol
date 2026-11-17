@@ -83,7 +83,16 @@ export const BOARD = [
         "earth1": 11,
         "earth2": 17,
         "geography-korea": 13,
-        "chemistry2": 17
+        "chemistry2": 17,
+        "german": 43,
+        "russian": 46,
+        "vietnamese": 50,
+        "spanish": 44,
+        "arabic": 40,
+        "japanese": 44,
+        "chinese": 45,
+        "french": 47,
+        "classical-chinese": 49
       }
     }
   },
