@@ -435,7 +435,6 @@ export default function App() {
 
         <main className="column" id="main">
           <h1>{MARK}</h1>
-          <p className="lede"><T k="lede" /></p>
 
           {/* The scores come first: one chart, for the total and for each subject. */}
           <section className="totals" aria-labelledby="scores-title">

@@ -1255,3 +1255,59 @@ p {
     width: auto;
   }
 }
+
+/* The admissions section opens from its heading. Folded, it is one line. */
+.admissions > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  list-style: none;
+  cursor: default;
+}
+
+.admissions > summary::-webkit-details-marker {
+  display: none;
+}
+
+.admissions > summary::after {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 1.5px solid var(--ink-2);
+  border-bottom: 1.5px solid var(--ink-2);
+  rotate: -45deg;
+  transition: rotate var(--dur-fade) ease-out;
+}
+
+.admissions[open] > summary::after {
+  rotate: 45deg;
+}
+
+.admissions > summary:focus-visible {
+  outline-offset: 4px;
+}
+
+/* The model, the profile and the model's mean percentile stand on one line. */
+.admissions .admission-controls {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.admission-p {
+  margin-inline-start: auto;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The papers the comparison uses are in full ink; the others step back. */
+.conversion-table tbody tr:not([data-used]) {
+  color: var(--ink-2);
+}
+
+@media (max-width: 40em) {
+  .admissions .admission-controls {
+    flex-direction: row;
+  }
+}
