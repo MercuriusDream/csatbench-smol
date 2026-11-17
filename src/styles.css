@@ -1,0 +1,912 @@
+/* The font is served from this origin, in src/fonts with its licence, so the page waits on no
+   other site for its first frame. Zalando Sans is the latin face, as on mercuriusdream.com.
+   The one Korean word on the page is set in the reader's own Korean face. */
+@font-face {
+  font-family: 'Zalando Sans';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('./fonts/zalando-sans-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light dark;
+
+  /* The planes and inks of mercuriusdream.com, unchanged. This page rests on its base plane, so the
+     home page's row grows into this colour and collapses out of it. There is no other colour here. */
+  --plane-base: light-dark(oklch(0.965 0.003 250), oklch(0.2 0.004 250));
+  --plane-raised: light-dark(oklch(0.995 0.002 250), oklch(0.245 0.005 250));
+  --plane-control: light-dark(oklch(0.9 0.005 250), oklch(0.3 0.006 250));
+  --plane-control-hover: light-dark(oklch(0.865 0.006 250), oklch(0.355 0.006 250));
+  --plane-control-active: light-dark(oklch(0.85 0.006 250), oklch(0.395 0.007 250));
+  --ink-1: light-dark(oklch(0.24 0.01 250), oklch(0.95 0.004 250));
+  --ink-2: light-dark(oklch(0.42 0.01 250), oklch(0.8 0.006 250));
+  --ink-boundary: light-dark(oklch(0.55 0.01 250), oklch(0.67 0.01 250));
+  --ink-inverse: light-dark(oklch(0.985 0.002 250), oklch(0.2 0.004 250));
+  --signal-focus: light-dark(oklch(0.55 0.18 255), oklch(0.74 0.13 255));
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+  --control-height: 2.75rem;
+  --inset-control: var(--space-4);
+  --inset-control-compact: var(--space-3);
+  --radius: 0.1875rem;
+  --focus-width: 2px;
+  --control-edge-width: 0px;
+  --dur-feedback: 50ms;
+  --dur-fade: 90ms;
+  --dur-veil: 240ms;
+  --ease-morph: cubic-bezier(0.2, 0, 0, 1);
+
+  --font: 'Zalando Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-zh: 'Zalando Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  --text-body: 400 1.0625rem / 1.6 var(--font);
+  --text-name: 500 1.5rem / 1.3 var(--font);
+  --edge: clamp(2rem, 11vw, 12rem);
+  /* A subject's column and the total's, wide enough for 98.7 and 399.2. */
+  --col-subject: 3.75rem;
+  --col-total: 3.5rem;
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --plane-base: light-dark(oklch(0.97 0.002 250), oklch(0.16 0.003 250));
+    --plane-raised: light-dark(oklch(1 0 0), oklch(0.26 0.004 250));
+    --plane-control: light-dark(oklch(0.82 0.004 250), oklch(0.36 0.005 250));
+    --plane-control-hover: light-dark(oklch(0.78 0.004 250), oklch(0.41 0.005 250));
+    --plane-control-active: light-dark(oklch(0.74 0.005 250), oklch(0.46 0.006 250));
+    --ink-1: light-dark(oklch(0.14 0.008 250), oklch(0.99 0.002 250));
+    --ink-2: light-dark(oklch(0.26 0.008 250), oklch(0.92 0.004 250));
+    --ink-boundary: light-dark(oklch(0.38 0.008 250), oklch(0.79 0.006 250));
+    --signal-focus: light-dark(oklch(0.45 0.14 255), oklch(0.8 0.1 255));
+    --focus-width: 3px;
+    --control-edge-width: 2px;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  min-width: 320px;
+  background: var(--plane-base);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow-wrap: anywhere;
+  color: var(--ink-1);
+  background: var(--plane-base);
+  font: var(--text-body);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+  cursor: default;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+::selection {
+  color: var(--ink-inverse);
+  background: var(--ink-1);
+}
+
+:focus-visible {
+  outline: var(--focus-width) solid var(--signal-focus);
+  outline-offset: 2px;
+}
+
+[lang='zh-CN'] {
+  font-family: var(--font-zh);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.app {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100svh;
+  background: var(--plane-base);
+}
+
+.skip-link {
+  position: fixed;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  padding: 0 var(--inset-control);
+  border-radius: var(--radius);
+  clip-path: inset(50%);
+  color: var(--ink-inverse);
+  background: var(--ink-1);
+}
+
+.skip-link:focus-visible {
+  clip-path: none;
+}
+
+/* The veil. This site and mercuriusdream.com are different origins, so the browser cannot carry one
+   page into the other. They hand over on the plane they share. Leaving, everything on the plane
+   fades and the home page starts under a plane of this colour, which collapses into the row that
+   opens this site. Arriving, that row's plane has grown over the home page, and this page starts as
+   the bare plane and brings its contents in. Changes in place, so they stay under reduced motion.
+   The home page keeps its copy of the plane in its public/morph.css. */
+.stage,
+.site-footer {
+  transition: opacity var(--dur-veil) var(--ease-morph);
+}
+
+/* Leaving is quicker than arriving: the reader has already decided. */
+html[data-veil] {
+  --dur-veil: 160ms;
+}
+
+html[data-veil] .stage,
+html[data-veil] .site-footer {
+  opacity: 0;
+}
+
+.stage {
+  position: relative;
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: 100rem;
+  margin-inline: auto;
+  padding-inline: var(--edge);
+}
+
+/* Controls that are their own words or mark: the same chips as on the home page.
+   The pointer changes their plane and nothing else. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  padding: 0 var(--inset-control);
+  border-radius: var(--radius);
+  color: var(--ink-1);
+  font: var(--text-body);
+  transition: background-color var(--dur-feedback) linear;
+}
+
+a.chip:hover {
+  background: var(--plane-control);
+}
+
+a.chip:active {
+  background: var(--plane-control-hover);
+  transition-duration: 0ms;
+}
+
+.chip.icon {
+  justify-content: center;
+  width: var(--control-height);
+  padding: 0;
+}
+
+.chip.icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.2;
+}
+
+/* The way back to mercuriusdream.com. */
+.top {
+  margin-inline-start: calc(var(--space-2) * -1);
+  padding-top: var(--space-5);
+}
+
+/* Family colours. They are the only hues on the page and they say one thing: which family a mark
+   belongs to. A family keeps its colour whoever else is on the board. Each scheme has its own steps,
+   checked against its plane for colour-blind separation. Words never wear them, and every mark has
+   its name beside it, so nothing is said by colour alone. */
+:root {
+  --series-gemma: light-dark(#2a78d6, #3987e5);
+  --series-bonsai: light-dark(#eb6834, #d95926);
+  --series-nanbeige: light-dark(#1baf7a, #199e70);
+  --series-qwen: light-dark(#eda100, #c98500);
+  --series-kanana: light-dark(#e87ba4, #d55181);
+  --series-lfm: light-dark(#008300, #0ca30c);
+  --series-raon: light-dark(#6250d6, #9085e9);
+
+  /* A chart's own words are a step smaller than the text, and its lines are the quietest marks. */
+  --text-chart: 400 0.875rem / 1.3 var(--font);
+  --line: light-dark(oklch(0.24 0.01 250 / 0.12), oklch(0.95 0.004 250 / 0.14));
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --line: light-dark(oklch(0.14 0.008 250 / 0.5), oklch(0.99 0.002 250 / 0.55));
+  }
+}
+
+/* The words keep the home page's measure. A chart takes the whole width between the page's edges. */
+.column {
+  width: 100%;
+  padding-top: clamp(0.5rem, 2vh, 3rem);
+  padding-bottom: var(--space-8);
+}
+
+h1 {
+  font: var(--text-name);
+  letter-spacing: 0;
+}
+
+/* A heading is the size of the text and heavier, and sits closer to what it introduces. */
+h2,
+h3 {
+  font: 500 1.0625rem / 1.6 var(--font);
+  letter-spacing: 0;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+.lede {
+  max-width: 30rem;
+  margin-top: var(--space-4);
+}
+
+/* The totals: the first thing on the page after its name. */
+.totals {
+  display: grid;
+  gap: var(--space-5);
+  margin-top: var(--space-6);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  color: var(--ink-2);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+/* A family's mark beside its name. */
+.swatch {
+  flex: none;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 0.125rem;
+  background: var(--series);
+  box-shadow: inset 0 0 0 var(--control-edge-width) var(--ink-boundary);
+}
+
+/* A row run with thinking off is drawn hollow: an edge in its family's colour, and nothing in it. */
+.swatch.off,
+.bar.off .bar-fill,
+.dot.off::before {
+  background: var(--plane-base);
+  box-shadow: inset 0 0 0 2px var(--series, var(--ink-2));
+}
+
+/* A chart. As written here it is a list for a narrow screen: each model's name and score on one
+   line and its bar under them, on a track that is the full marks. Where there is room, further
+   down, the same list stands up: models along the bottom, marks up the side. */
+.chart {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.chart-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+}
+
+.chart-full,
+.bar-mode {
+  color: var(--ink-2);
+}
+
+.scale {
+  display: none;
+}
+
+.bars {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-4);
+}
+
+.bar-value {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-track {
+  grid-column: 1 / -1;
+  height: 0.75rem;
+  border-radius: var(--radius);
+  background: var(--plane-raised);
+  box-shadow: inset 0 0 0 var(--control-edge-width) var(--ink-boundary);
+}
+
+.bar-fill {
+  display: block;
+  width: calc(var(--share) * 100%);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--series);
+  box-shadow: inset 0 0 0 var(--control-edge-width) var(--ink-boundary);
+}
+
+/* Room for the chart to stand up. Models go along the bottom with their names slanted under them,
+   so a name of any length fits a column of any width. Marks go up the side, with a line across at
+   each. A bar rises from the bottom line to its score, which is written on top of it. */
+@media (min-width: 64em) {
+  .plot {
+    --plot-height: 13rem;
+    --gutter: 2.25rem;
+    --value-room: 1.5rem;
+    /* The longest name, slanted: its length along the slope, and two lines of depth across it. */
+    --label-room: calc(var(--longest) * 0.4em + 3.5em);
+    position: relative;
+    padding: var(--value-room) 0 var(--label-room) var(--gutter);
+    font: var(--text-chart);
+  }
+
+  .chart.tall .plot {
+    --plot-height: 22rem;
+  }
+
+  .scale {
+    position: absolute;
+    inset-inline: var(--gutter) 0;
+    top: var(--value-room);
+    display: block;
+    height: var(--plot-height);
+  }
+
+  .tick {
+    position: absolute;
+    inset-inline: 0;
+    bottom: calc(var(--at) * 100%);
+    border-top: 1px solid var(--line);
+  }
+
+  .tick-label {
+    position: absolute;
+    inset-inline-end: 100%;
+    top: 0;
+    padding-inline-end: var(--space-2);
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    translate: 0 -50%;
+  }
+
+  .bars {
+    position: relative;
+    grid-template-columns: repeat(var(--count), minmax(0, 1fr));
+    gap: 0;
+    height: var(--plot-height);
+  }
+
+  .bar {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0;
+    height: 100%;
+  }
+
+  .bar-value {
+    order: 1;
+    padding-bottom: 0.1875rem;
+  }
+
+  .bar-track {
+    order: 2;
+    flex: none;
+    width: min(62%, 3.75rem);
+    height: calc(var(--share) * 100%);
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .bar-fill {
+    width: 100%;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+
+  /* The name hangs from the foot of its bar and slants down to the left, so it ends under the
+     bar and reads up toward it. */
+  .bar-model {
+    position: absolute;
+    top: 100%;
+    inset-inline-end: 50%;
+    display: grid;
+    justify-items: end;
+    margin-top: var(--space-2);
+    white-space: nowrap;
+    transform: rotate(-45deg);
+    transform-origin: top right;
+  }
+}
+
+/* Totals against size, as dots. Size runs across, each line twice the one before; the total runs
+   up. A dot is a point with no size of its own, so its mark and its name hang from it. */
+.field {
+  --gutter: 2.25rem;
+  font: var(--text-chart);
+}
+
+.field.wide {
+  display: none;
+}
+
+.field-plot {
+  position: relative;
+  height: var(--field-height);
+  margin: var(--space-5) 0 var(--space-6) var(--gutter);
+}
+
+.field .tick {
+  position: absolute;
+  inset-inline: 0;
+  bottom: calc(var(--at) * 100%);
+  border-top: 1px solid var(--line);
+}
+
+.field .tick-label {
+  position: absolute;
+  inset-inline-end: 100%;
+  top: 0;
+  padding-inline-end: var(--space-2);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  translate: 0 -50%;
+}
+
+.tick-size {
+  position: absolute;
+  inset-block: 0;
+  left: calc(var(--at) * 100%);
+  border-inline-start: 1px solid var(--line);
+}
+
+.tick-size-label {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  padding-top: var(--space-1);
+  color: var(--ink-2);
+  white-space: nowrap;
+  translate: -50% 0;
+}
+
+.field-axis {
+  margin-inline-start: var(--gutter);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+/* The line stretches with the plot and keeps its width. */
+.frontier {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.frontier polyline {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.dot {
+  position: absolute;
+  left: calc(var(--x) * 100%);
+  bottom: calc(var(--y) * 100%);
+  width: 0;
+  height: 0;
+}
+
+/* The mark, with a ring of the page's plane so that marks which overlap stay apart. */
+.dot::before {
+  content: '';
+  position: absolute;
+  top: -0.3125rem;
+  left: -0.3125rem;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: var(--series);
+  outline: 2px solid var(--plane-base);
+}
+
+/* A hollow mark lies over a full one and lets it show through, so two models level on size and
+   total are both seen. */
+.dot.off {
+  z-index: 1;
+}
+
+.dot.off::before {
+  background: none;
+}
+
+/* A name goes where the build found room for it: beside its dot, above or below it, or at a corner. */
+.dot-name {
+  position: absolute;
+  white-space: nowrap;
+}
+
+.dot[data-spot='e'] .dot-name { left: 0.625rem; top: 0; translate: 0 -50%; }
+.dot[data-spot='w'] .dot-name { right: 0.625rem; top: 0; translate: 0 -50%; }
+.dot[data-spot='n'] .dot-name { left: 0; bottom: 0.5rem; translate: -50% 0; }
+.dot[data-spot='s'] .dot-name { left: 0; top: 0.5rem; translate: -50% 0; }
+.dot[data-spot='ne'] .dot-name { left: 0.375rem; bottom: 0.375rem; }
+.dot[data-spot='se'] .dot-name { left: 0.375rem; top: 0.375rem; }
+.dot[data-spot='nw'] .dot-name { right: 0.375rem; bottom: 0.375rem; }
+.dot[data-spot='sw'] .dot-name { right: 0.375rem; top: 0.375rem; }
+
+@media (min-width: 64em) {
+  .field.narrow {
+    display: none;
+  }
+
+  .field.wide {
+    display: block;
+  }
+}
+
+/* What is behind the totals comes after them. Groups are set apart by far more space than holds
+   each one together. */
+.detail {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-7);
+}
+
+.charts {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.detail.words,
+.aside {
+  max-width: 30rem;
+}
+
+.aside {
+  color: var(--ink-2);
+}
+
+/* The board. Its planes hang outside the ink line, as the home page's rows do, so every name starts
+   on the text's edge. One grid for the heads and for every entry keeps the numbers in their columns. */
+.board {
+  max-width: calc(48rem + var(--inset-control-compact) * 2);
+  margin-inline: calc(var(--inset-control-compact) * -1);
+}
+
+.board-head,
+.entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(5, var(--col-subject)) var(--col-total);
+  align-items: center;
+  column-gap: var(--space-2);
+  padding: var(--space-2) var(--inset-control-compact);
+}
+
+.board-head {
+  color: var(--ink-2);
+}
+
+.head-subject,
+.head-total,
+.entry-subject,
+.entry-total {
+  text-align: end;
+}
+
+/* Figures of one width, so a column of scores lines up digit under digit. */
+.entry-subject,
+.entry-total {
+  font-variant-numeric: tabular-nums;
+}
+
+.entries {
+  display: grid;
+  gap: 2px;
+}
+
+.entry {
+  min-height: var(--control-height);
+  border-radius: var(--radius);
+  background: var(--plane-raised);
+  box-shadow: inset 0 0 0 var(--control-edge-width) var(--ink-boundary);
+}
+
+.entry-model {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.entry-detail,
+.entry-subject {
+  color: var(--ink-2);
+}
+
+/* The heads name the columns, so the names inside the cells are for the narrow layout below. */
+.entry-label {
+  display: none;
+}
+
+/* Rows, as on the home page. */
+.rows {
+  display: grid;
+  gap: 2px;
+  margin-top: var(--space-2);
+  margin-inline: calc(var(--inset-control-compact) * -1);
+}
+
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--space-4);
+  align-items: center;
+  column-gap: var(--space-2);
+  width: 100%;
+  min-height: var(--control-height);
+  padding: var(--space-2) var(--inset-control-compact);
+  border-radius: var(--radius);
+  color: var(--ink-1);
+  background: var(--plane-raised);
+  box-shadow: inset 0 0 0 var(--control-edge-width) var(--ink-boundary);
+  font: var(--text-body);
+  text-align: start;
+  transition: background-color var(--dur-feedback) linear;
+}
+
+.row:hover,
+.row:focus-visible {
+  background: var(--plane-control);
+}
+
+.row:active {
+  background: var(--plane-control-hover);
+  transition-duration: 0ms;
+}
+
+.row:focus-visible {
+  z-index: 1;
+  outline-offset: calc(var(--focus-width) * -1);
+}
+
+/* The arrow grows a little toward where it points, as on the home page. */
+.row svg {
+  width: var(--space-4);
+  height: var(--space-4);
+  overflow: visible;
+  color: var(--ink-2);
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.2;
+  transform-origin: bottom left;
+  transition: transform var(--dur-fade) ease-out;
+}
+
+.row:hover svg,
+.row:focus-visible svg {
+  transform: scale(1.1);
+}
+
+/* A label and its detail share the row, and part onto two lines where the row is too narrow for both. */
+.row-text {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  column-gap: var(--space-4);
+  min-width: 0;
+}
+
+.row-detail {
+  color: var(--ink-2);
+}
+
+/* The same footer as the home page, at the same edge. */
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) 0;
+  width: 100%;
+  max-width: 100rem;
+  margin-inline: auto;
+  padding-inline: calc(var(--edge) - var(--inset-control));
+  padding-bottom: var(--space-5);
+}
+
+.site-footer .handle,
+.site-footer .icp {
+  color: var(--ink-2);
+}
+
+/* The only colour on the page waits for the pointer. */
+.emoji {
+  filter: grayscale(1);
+  transition: filter var(--dur-fade) linear;
+}
+
+.egg:hover .emoji,
+.egg:focus-visible .emoji {
+  filter: none;
+}
+
+/* Too narrow for the board's seven columns. The heads go, and each entry takes two lines: the model
+   and its total, then the five subjects, each with its name, as one line of text that wraps where
+   it must. */
+@media (max-width: 56.25em) {
+  .board-head {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .entry {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: var(--space-3);
+  }
+
+  .entry-model {
+    order: 1;
+    flex: 1 1 0;
+  }
+
+  .entry-total {
+    order: 2;
+  }
+
+  /* The break between the two lines. */
+  .entry::after {
+    content: '';
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .entry-subject {
+    order: 4;
+    text-align: start;
+  }
+
+  .entry-label {
+    display: inline;
+  }
+}
+
+@media (max-width: 40em) {
+  :root {
+    --edge: 2rem;
+  }
+}
+
+/* The narrowest screens give the rows a little more width. */
+@media (max-width: 22.5em) {
+  :root {
+    --edge: 1.5rem;
+  }
+}
+
+/* Forced colours remove the planes and the hues, so rows and tracks take an edge, bars and the
+   chart's lines take the text colour, and the family marks, which now say nothing, go. */
+@media (forced-colors: active) {
+  .row,
+  .entry,
+  .bar-track {
+    border: 1px solid CanvasText;
+  }
+
+  .bar-fill {
+    background: CanvasText;
+  }
+
+  .tick,
+  .tick-size {
+    border-color: CanvasText;
+  }
+
+  .frontier polyline {
+    stroke: CanvasText;
+  }
+
+  .dot::before {
+    background: CanvasText;
+  }
+
+  .swatch,
+  .legend {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row svg {
+    transition: none;
+  }
+
+  .row:hover svg,
+  .row:focus-visible svg {
+    transform: none;
+  }
+}
+
+@media print {
+  .top {
+    display: none;
+  }
+}

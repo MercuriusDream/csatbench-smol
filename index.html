@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSAT-benchmark-smol</title>
+    <meta name="description" content="Small open-weight language models take the 2026 Korean college entrance exam. Scores out of 450." />
+    <link rel="canonical" href="https://csatsmol.mercuriusdream.com/" />
+    <link rel="alternate" type="text/markdown" href="/llms.txt" />
+    <meta name="theme-color" content="#f2f4f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#151618" media="(prefers-color-scheme: dark)" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="霧雲" />
+    <meta property="og:title" content="CSAT-benchmark-smol" />
+    <meta property="og:description" content="Small open-weight language models take the 2026 Korean college entrance exam. Scores out of 450." />
+    <meta property="og:url" content="https://csatsmol.mercuriusdream.com/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:creator" content="@mercuriusdream" />
+    <link rel="icon" type="image/svg+xml" href="./src/assets/favicon.svg" />
+    <link rel="stylesheet" href="./src/styles.css" />
+    <script>
+      // Arriving from the home page, whose row has grown into this plane: start as the bare plane.
+      try {
+        const arriving = performance.getEntriesByType('navigation')[0]?.type === 'navigate';
+        if (arriving && new URL(document.referrer).origin === 'https://mercuriusdream.com') document.documentElement.dataset.veil = '';
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // One frame of the bare plane, then lift the veil.
+      requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.removeAttribute('data-veil')));
+    </script>
+    <script type="module" src="./src/main.jsx"></script>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+# Everything here stays on this machine unless it is listed below.
+# The exam's text and figures are KICE's copyrighted work, and the models' raw responses quote
+# them back, so neither is ever committed. The runs, their logs and their tooling stay local too.
+/*
+!/.gitignore
+!/.github/
+!/README.md
+!/CNAME
+!/index.html
+!/package.json
+!/bun.lock
+!/build.js
+!/src/
+!/public/
+!/scripts/
+/scripts/*
+!/scripts/preview.js
+
+node_modules/
+dist/
+.DS_Store
