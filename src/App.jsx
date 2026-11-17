@@ -1,3 +1,5 @@
+import { useLayoutEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import {
   BOARD, FAMILIES, FRONTIER, FULL, HOME, HOW, LEDE, LINKS, MARK, SCALE, SIZE_AXIS, SIZE_TICKS, SUBJECTS, TOTAL_TICKS, UPDATED, WHY,
   detail, points, sizeAt, ticks,
@@ -21,41 +23,121 @@ function goHome(event) {
   leaveTo(HOME);
 }
 
-// A family's colour. The name beside each mark says which model it is; the colour says its family.
-const series = (family) => ({ '--series': `var(--series-${family})` });
+// A row's colour: its family's, and the family's darker step for a row run with thinking off.
+const series = (family, mode) => ({ '--series': `var(--series-${family}${mode ? '-off' : ''})` });
 
-// One chart: models along the bottom, marks up the side, a bar for each model with its score on
+// The legend: each family, and after it its darker step where the board has such a row.
+const KEYS = FAMILIES.flatMap((family) => {
+  const off = BOARD.find((entry) => entry.family === family.key && entry.mode);
+  return off ? [{ ...family, mode: '' }, { ...family, mode: off.mode }] : [{ ...family, mode: '' }];
+});
+
+// What the chart can show: the total, then each subject.
+const VIEWS = [
+  { id: 'total', name: 'Total', full: FULL, lines: TOTAL_TICKS, score: (entry) => entry.total },
+  ...SUBJECTS.map((subject, index) => ({
+    id: subject.name.toLowerCase(),
+    name: subject.name,
+    full: subject.full,
+    lines: ticks(subject.full),
+    score: (entry) => entry.subjects[index],
+  })),
+];
+
+// A model's name as one plain word. The parts of its bar carry it from one view to the next, so
+// the browser knows each bar for the same bar and moves it instead of drawing another.
+const word = (entry) => `${entry.name} ${entry.mode}`.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+// The tabs over the chart. The plane under the chosen tab is one object: it is moved to the tab,
+// never drawn again. Before the script has measured anything, the chosen tab wears the plane itself.
+function Tabs({ label, views, value, onChange, controls }) {
+  const track = useRef(null);
+  const [at, setAt] = useState(null);
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      const tab = track.current?.querySelector('[aria-selected="true"]');
+      if (tab) setAt({ x: tab.offsetLeft, y: tab.offsetTop, w: tab.offsetWidth, h: tab.offsetHeight });
+    };
+    measure();
+    // A font arriving or a change of text size moves the tabs without a new choice.
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(track.current);
+    return () => observer.disconnect();
+  }, [value]);
+
+  // Arrow keys move the choice along the row, and round its ends.
+  function onKeyDown(event, index) {
+    const last = views.length - 1;
+    const next = { ArrowRight: index === last ? 0 : index + 1, ArrowLeft: index === 0 ? last : index - 1, Home: 0, End: last }[event.key];
+    if (next === undefined) return;
+    event.preventDefault();
+    track.current.querySelectorAll('[role="tab"]')[next].focus();
+    onChange(views[next].id);
+  }
+
+  return (
+    <div className="tabs" role="tablist" aria-label={label} ref={track} data-placed={at ? '' : undefined}>
+      {at && (
+        <span
+          className="tabs-plane"
+          aria-hidden="true"
+          style={{ width: at.w, height: at.h, transform: `translate(${at.x}px, ${at.y}px)` }}
+        />
+      )}
+      {views.map((view, index) => (
+        <button
+          type="button"
+          role="tab"
+          className="tab"
+          key={view.id}
+          id={`tab-${view.id}`}
+          aria-selected={view.id === value}
+          aria-controls={controls}
+          tabIndex={view.id === value ? 0 : -1}
+          onClick={() => onChange(view.id)}
+          onKeyDown={(event) => onKeyDown(event, index)}
+        >
+          {view.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// The chart: models along the bottom, marks up the side, a bar for each model with its score on
 // top. On a narrow screen the same list is set as rows, each bar under its name.
 // `longest` is the longest label, in letters: the room the slanted names need under the bars.
-function Chart({ id, heading: Heading, title, full, lines, entries, tall }) {
+function Chart({ view, entries }) {
   const longest = Math.max(...entries.map((entry) => Math.max(entry.name.length, entry.mode.length)));
   return (
-    <figure className={tall ? 'chart tall' : 'chart'} aria-labelledby={id}>
-      <figcaption className="chart-title">
-        <Heading id={id}>{title}</Heading> <span className="chart-full">out of {full}</span>
-      </figcaption>
+    <figure className="chart" aria-label={`${view.name}, out of ${view.full}`}>
       <div className="plot" style={{ '--count': entries.length, '--longest': longest }}>
         <div className="scale" aria-hidden="true">
-          {lines.map((line) => (
-            <span className="tick" key={line} style={{ '--at': line / full }}>
+          {view.lines.map((line) => (
+            <span className="tick" key={line} style={{ '--at': line / view.full }}>
               <span className="tick-label">{line}</span>
             </span>
           ))}
         </div>
         <ol className="bars">
-          {entries.map((entry) => (
-            <li className={entry.mode ? 'bar off' : 'bar'} key={`${entry.name} ${entry.mode}`} style={{ ...series(entry.family), '--share': entry.value / full }}>
-              <span className="bar-model">
-                <span className="bar-name">{entry.name}</span>
-                {entry.mode && ' '}
-                {entry.mode && <span className="bar-mode">{entry.mode}</span>}
-              </span>
-              <span className="bar-value">{points(entry.value)}</span>
-              <span className="bar-track" aria-hidden="true">
-                <span className="bar-fill" />
-              </span>
-            </li>
-          ))}
+          {entries.map((entry) => {
+            const name = word(entry);
+            return (
+              <li className="bar" key={name} style={{ ...series(entry.family, entry.mode), '--share': entry.value / view.full }}>
+                <span className="bar-model" style={{ viewTransitionName: `name-${name}` }}>
+                  <span className="bar-name">{entry.name}</span>
+                  {entry.mode && ' '}
+                  {entry.mode && <span className="bar-mode">{entry.mode}</span>}
+                </span>
+                <span className="bar-value" style={{ viewTransitionName: `value-${name}` }}>{points(entry.value)}</span>
+                <span className="bar-track" aria-hidden="true">
+                  <span className="bar-fill" style={{ viewTransitionName: `fill-${name}` }} />
+                </span>
+              </li>
+            );
+          })}
         </ol>
       </div>
     </figure>
@@ -98,7 +180,7 @@ function Field({ setting, width, height }) {
         </div>
         <ol className="dots">
           {MARKS.map((mark, index) => (
-            <li className={mark.mode ? 'dot off' : 'dot'} key={`${mark.name} ${mark.mode}`} data-spot={spots[index]} style={{ ...series(mark.family), '--x': mark.x, '--y': mark.y }}>
+            <li className="dot" key={`${mark.name} ${mark.mode}`} data-spot={spots[index]} style={{ ...series(mark.family, mark.mode), '--x': mark.x, '--y': mark.y }}>
               <span className="dot-name">
                 {mark.name}
                 <span className="visually-hidden">
@@ -124,7 +206,7 @@ function Entry({ entry }) {
   return (
     <li className="entry" role="row">
       <span className="entry-model" role="rowheader">
-        <span className={entry.mode ? 'swatch off' : 'swatch'} style={series(entry.family)} aria-hidden="true" />
+        <span className="swatch" style={series(entry.family, entry.mode)} aria-hidden="true" />
         <span>
           <span className="entry-name">{entry.name}</span> <span className="entry-detail">{detail(entry)}</span>
         </span>
@@ -144,6 +226,18 @@ function Entry({ entry }) {
 }
 
 export default function App() {
+  const [shown, setShown] = useState('total');
+  const view = VIEWS.find((candidate) => candidate.id === shown);
+
+  // Changing the view keeps every bar. Where the browser can, each one travels to its new place
+  // and size; under reduced motion, and where it cannot, the chart changes in place.
+  function show(id) {
+    if (id === shown) return;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (still || !document.startViewTransition) return setShown(id);
+    document.startViewTransition(() => flushSync(() => setShown(id)));
+  }
+
   return (
     <div className="app">
       <a className="skip-link" href="#main">Skip to content</a>
@@ -161,21 +255,24 @@ export default function App() {
           <h1>{MARK}</h1>
           <p className="lede">{LEDE}</p>
 
-          {/* The totals come first. What is behind them comes after. */}
-          <section className="totals">
+          {/* The scores come first: one chart, for the total and for each subject. */}
+          <section className="totals" aria-labelledby="scores-title">
+            <h2 className="visually-hidden" id="scores-title">Scores</h2>
+            <div className="chart-head">
+              <Tabs label="Score shown" views={VIEWS} value={shown} onChange={show} controls="scores-panel" />
+              <p className="chart-full">out of {view.full}</p>
+            </div>
             <ul className="legend" aria-label="Model families">
-              {FAMILIES.map((family) => (
-                <li key={family.key}>
-                  <span className="swatch" style={series(family.key)} aria-hidden="true" />
-                  {family.name}
+              {KEYS.map((key) => (
+                <li key={`${key.key} ${key.mode}`}>
+                  <span className="swatch" style={series(key.key, key.mode)} aria-hidden="true" />
+                  {key.mode ? `${key.name}, ${key.mode}` : key.name}
                 </li>
               ))}
-              <li>
-                <span className="swatch off" aria-hidden="true" />
-                no thinking
-              </li>
             </ul>
-            <Chart id="total-title" heading="h2" title="Total" full={FULL} lines={TOTAL_TICKS} entries={ranked((entry) => entry.total)} tall />
+            <div role="tabpanel" id="scores-panel" aria-labelledby={`tab-${view.id}`}>
+              <Chart view={view} entries={ranked(view.score)} />
+            </div>
           </section>
 
           <section className="detail" aria-labelledby="size-title">
@@ -188,26 +285,9 @@ export default function App() {
             </figure>
           </section>
 
-          <section className="detail" aria-labelledby="subjects-title">
-            <h2 id="subjects-title">By subject</h2>
-            <div className="charts">
-              {SUBJECTS.map((subject, index) => (
-                <Chart
-                  key={subject.name}
-                  id={`subject-${index}`}
-                  heading="h3"
-                  title={subject.name}
-                  full={subject.full}
-                  lines={ticks(subject.full)}
-                  entries={ranked((entry) => entry.subjects[index])}
-                />
-              ))}
-            </div>
-          </section>
-
-          <section className="detail" aria-labelledby="scores-title">
-            <h2 id="scores-title">All scores</h2>
-            <div className="board" role="table" aria-labelledby="scores-title">
+          <section className="detail" aria-labelledby="all-title">
+            <h2 id="all-title">All scores</h2>
+            <div className="board" role="table" aria-labelledby="all-title">
               <div className="board-head" role="row">
                 <span role="columnheader">Model</span>
                 {SUBJECTS.map((subject) => (

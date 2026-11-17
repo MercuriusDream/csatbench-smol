@@ -1,0 +1,24 @@
+/* The morph between two views of the chart. The build writes this file into the page's head as it
+   is: the bundler's CSS reader does not know these selectors yet.
+
+   Changing the tab keeps every bar. Each bar, its score and its name are the same objects in the
+   next view, and so is the plane under the chosen tab. The page names them, and the browser moves
+   each one to its new place and size. Everything else changes in place. Under reduced motion the
+   page does not ask for any of this. */
+::view-transition-group(*) {
+  animation-duration: 240ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 240ms;
+}
+
+/* A bar and the tabs' plane are each one flat colour, so their pictures are stretched to the size
+   they are passing through. Without this a bar keeps its old height on the way and hangs below
+   the chart's bottom line. */
+::view-transition-old(*.fill),
+::view-transition-new(*.fill) {
+  height: 100%;
+}
