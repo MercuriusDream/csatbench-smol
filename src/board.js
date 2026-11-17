@@ -2,7 +2,7 @@
 export const UPDATED = '2026-11-18';
 export const FULL = 450;
 export const SUBJECTS = [{"name": "Korean", "full": 100}, {"name": "Math", "full": 100}, {"name": "English", "full": 100}, {"name": "History", "full": 50}, {"name": "Inquiry", "full": 100}];
-export const PAPERS = {"korean-common": 76, "korean-speech": 24, "korean-language": 24, "math-common": 74, "math-probability": 26, "math-calculus": 26, "math-geometry": 26, "english": 100, "history": 50, "physics1": 50, "chemistry1": 50, "biology1": 50, "socioculture": 50, "earth1": 50, "physics2": 50, "chemistry2": 50, "biology2": 50, "earth2": 50, "ethics-life": 50, "ethics-thought": 50, "geography-korea": 50, "geography-world": 50, "history-eastasia": 50, "history-world": 50, "economics": 50, "politics-law": 50, "work-life": 50, "agriculture": 50, "industry": 50, "commerce": 50, "fisheries": 50, "human-development": 50};
+export const PAPERS = {"korean-common": 76, "korean-speech": 24, "korean-language": 24, "math-common": 74, "math-probability": 26, "math-calculus": 26, "math-geometry": 26, "english": 100, "history": 50, "physics1": 50, "chemistry1": 50, "biology1": 50, "socioculture": 50, "earth1": 50, "physics2": 50, "chemistry2": 50, "biology2": 50, "earth2": 50, "ethics-life": 50, "ethics-thought": 50, "geography-korea": 50, "geography-world": 50, "history-eastasia": 50, "history-world": 50, "economics": 50, "politics-law": 50, "work-life": 50, "agriculture": 50, "industry": 50, "commerce": 50, "fisheries": 50, "human-development": 50, "german": 50, "french": 50, "spanish": 50, "chinese": 50, "japanese": 50, "russian": 50, "arabic": 50, "vietnamese": 50, "classical-chinese": 50};
 export const FAMILIES = [{"key": "gemma", "name": "Gemma 4"}, {"key": "bonsai", "name": "Ternary Bonsai 2"}, {"key": "nanbeige", "name": "Nanbeige4.2"}, {"key": "qwen", "name": "Qwen3.5"}, {"key": "kanana", "name": "Kanana-2"}, {"key": "lfm", "name": "LFM3"}];
 export const BOARD = [
   {
@@ -31,7 +31,16 @@ export const BOARD = [
       "socioculture": 41,
       "biology1": 38,
       "chemistry1": 38,
-      "history": 33
+      "history": 33,
+      "german": 48,
+      "russian": 44,
+      "vietnamese": 50,
+      "spanish": 46,
+      "arabic": 48,
+      "japanese": 48,
+      "chinese": 44,
+      "french": 48,
+      "classical-chinese": 46
     },
     "off": {
       "total": 327.5,
@@ -259,7 +268,35 @@ export const BOARD = [
       "socioculture": 17,
       "biology1": 20,
       "chemistry1": 12,
-      "history": 27
+      "history": 27,
+      "economics": 13,
+      "industry": 27,
+      "agriculture": 26,
+      "history-eastasia": 15,
+      "physics2": 22,
+      "commerce": 28,
+      "biology2": 24,
+      "ethics-life": 31,
+      "work-life": 33,
+      "history-world": 26,
+      "geography-world": 16,
+      "fisheries": 42,
+      "ethics-thought": 27,
+      "human-development": 29,
+      "politics-law": 24,
+      "earth1": 14,
+      "earth2": 10,
+      "geography-korea": 6,
+      "chemistry2": 17,
+      "german": 35,
+      "russian": 42,
+      "vietnamese": 44,
+      "spanish": 40,
+      "arabic": 41,
+      "japanese": 38,
+      "chinese": 40,
+      "french": 42,
+      "classical-chinese": 39
     },
     "off": {
       "total": 237.7,
@@ -411,7 +448,16 @@ export const BOARD = [
       "earth1": 11,
       "earth2": 11,
       "geography-korea": 10,
-      "chemistry2": 16
+      "chemistry2": 16,
+      "german": 21,
+      "russian": 15,
+      "vietnamese": 27,
+      "spanish": 23,
+      "arabic": 17,
+      "japanese": 12,
+      "chinese": 30,
+      "french": 24,
+      "classical-chinese": 27
     },
     "off": null
   },
