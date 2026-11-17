@@ -87,11 +87,15 @@ const word = (entry) => entry.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 // The board's models with one view's scores, highest first. Models level on a score keep the
 // order of their totals.
 const ranked = (view) =>
-  BOARD.map((entry) => {
+  BOARD.flatMap((entry) => {
+    const own = view.pick(entry);
     const front = entry.off ? view.pick(entry.off) : null;
-    return { ...entry, value: view.pick(entry), front: Number.isFinite(front) ? front : null };
+    if (Number.isFinite(own)) return [{ ...entry, value: own, front: Number.isFinite(front) ? front : null }];
+    // An add-on paper may be finished only in the thinking-off run so far. Show that score as
+    // one darker bar instead of dropping it because the thinking-on run has not reached it yet.
+    if (Number.isFinite(front)) return [{ ...entry, value: front, front: null, offOnly: true }];
+    return [];
   })
-    .filter((entry) => Number.isFinite(entry.value))
     .sort((a, b) => b.value - a.value);
 
 // A chart keeps its form on every screen. Where the screen is too narrow for it, the chart is
@@ -208,10 +212,11 @@ function Chart({ view, entries, t }) {
                     className="bar"
                     key={name}
                     data-front={both ? (offInFront ? 'off' : 'own') : undefined}
-                    style={{ ...series(entry.family), '--share': entry.value / view.full, '--front': both ? entry.front / view.full : 0 }}
+                    style={{ ...series(entry.family, entry.offOnly), '--share': entry.value / view.full, '--front': both ? entry.front / view.full : 0 }}
                   >
                     <span className="bar-model" style={{ viewTransitionName: `name-${name}` }}>{entry.name}</span>
                     <span className={ownInFront ? 'bar-value inside' : 'bar-value'} style={{ viewTransitionName: `value-${name}` }}>
+                      {entry.offOnly && <span className="visually-hidden"><T k="off" /> </span>}
                       {points(entry.value)}
                     </span>
                     {both && (

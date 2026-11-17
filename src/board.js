@@ -2,7 +2,7 @@
 export const UPDATED = '2026-11-18';
 export const FULL = 450;
 export const SUBJECTS = [{"name": "Korean", "full": 100}, {"name": "Math", "full": 100}, {"name": "English", "full": 100}, {"name": "History", "full": 50}, {"name": "Inquiry", "full": 100}];
-export const PAPERS = {"korean-common": 76, "korean-speech": 24, "korean-language": 24, "math-common": 74, "math-probability": 26, "math-calculus": 26, "math-geometry": 26, "english": 100, "history": 50, "physics1": 50, "chemistry1": 50, "biology1": 50, "socioculture": 50};
+export const PAPERS = {"korean-common": 76, "korean-speech": 24, "korean-language": 24, "math-common": 74, "math-probability": 26, "math-calculus": 26, "math-geometry": 26, "english": 100, "history": 50, "physics1": 50, "chemistry1": 50, "biology1": 50, "socioculture": 50, "earth1": 50, "physics2": 50, "chemistry2": 50, "biology2": 50, "earth2": 50, "ethics-life": 50, "ethics-thought": 50, "geography-korea": 50, "geography-world": 50, "history-eastasia": 50, "history-world": 50, "economics": 50, "politics-law": 50, "work-life": 50, "agriculture": 50, "industry": 50, "commerce": 50, "fisheries": 50, "human-development": 50};
 export const FAMILIES = [{"key": "gemma", "name": "Gemma 4"}, {"key": "bonsai", "name": "Ternary Bonsai 2"}, {"key": "nanbeige", "name": "Nanbeige4.2"}, {"key": "qwen", "name": "Qwen3.5"}, {"key": "kanana", "name": "Kanana-2"}, {"key": "lfm", "name": "LFM3"}];
 export const BOARD = [
   {
@@ -283,7 +283,26 @@ export const BOARD = [
         "socioculture": 15,
         "biology1": 11,
         "chemistry1": 11,
-        "history": 30
+        "history": 30,
+        "economics": 18,
+        "industry": 14,
+        "agriculture": 22,
+        "history-eastasia": 16,
+        "physics2": 17,
+        "commerce": 19,
+        "biology2": 19,
+        "ethics-life": 33,
+        "work-life": 22,
+        "history-world": 12,
+        "geography-world": 13,
+        "fisheries": 24,
+        "ethics-thought": 28,
+        "human-development": 29,
+        "politics-law": 12,
+        "earth1": 8,
+        "earth2": 16,
+        "geography-korea": 14,
+        "chemistry2": 17
       }
     }
   },
