@@ -1249,37 +1249,6 @@ p {
   }
 }
 
-/* The admissions section opens from its heading. Folded, it is one line. */
-.admissions > summary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  list-style: none;
-  cursor: default;
-}
-
-.admissions > summary::-webkit-details-marker {
-  display: none;
-}
-
-.admissions > summary::after {
-  content: '';
-  width: 0.5rem;
-  height: 0.5rem;
-  border-right: 1.5px solid var(--ink-2);
-  border-bottom: 1.5px solid var(--ink-2);
-  rotate: -45deg;
-  transition: rotate var(--dur-fade) ease-out;
-}
-
-.admissions[open] > summary::after {
-  rotate: 45deg;
-}
-
-.admissions > summary:focus-visible {
-  outline-offset: 4px;
-}
-
 /* The model, the profile and the model's mean percentile stand on one line. */
 .admissions .admission-controls {
   flex-direction: row;
@@ -1427,4 +1396,170 @@ p {
 .tip-lines {
   display: grid;
   gap: 2px;
+}
+
+/* The admissions row, and the panel it grows into. The row is a home-page row; open, it stays in
+   its place unseen, and the panel's top bar is where it went. */
+.adm-rows {
+  margin-top: var(--space-7);
+}
+
+.adm-row[data-open] {
+  visibility: hidden;
+}
+
+.adm-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 29;
+  background: light-dark(oklch(0.2 0.004 250 / 0.28), oklch(0 0 0 / 0.5));
+}
+
+/* A wide screen: a panel on the right, the page's full height. */
+.adm-panel {
+  position: fixed;
+  top: var(--space-3);
+  right: var(--space-3);
+  bottom: var(--space-3);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: min(46rem, calc(100vw - 2 * var(--space-3)));
+  overscroll-behavior: contain;
+}
+
+.adm-plane {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  background: var(--plane-raised);
+  box-shadow: inset 0 0 0 var(--control-edge-width) var(--ink-boundary);
+  transform-origin: 0 0;
+}
+
+/* The top bar: the row's title and its mark, now the close control. */
+.adm-bar {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--space-4);
+  align-items: center;
+  column-gap: var(--space-2);
+  min-height: var(--control-height);
+  padding: var(--space-2) var(--inset-control-compact);
+  border: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  color: var(--ink-1);
+  background: none;
+  font: var(--text-body);
+  text-align: start;
+  cursor: default;
+  transition: background-color var(--dur-feedback) linear;
+}
+
+.adm-bar:hover {
+  background: var(--plane-control);
+}
+
+.adm-bar:focus-visible {
+  outline-offset: calc(var(--focus-width) * -1);
+}
+
+.adm-title {
+  justify-self: start;
+}
+
+.adm-scroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-2) var(--inset-control-compact) var(--space-6);
+  overscroll-behavior: contain;
+}
+
+.adm-body {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* A narrow screen: a sheet that rises from the bottom. */
+@media (max-width: 48em) {
+  .adm-panel {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    max-height: 88svh;
+    min-height: 60svh;
+  }
+
+  .adm-plane {
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+}
+
+/* The mark: > in the row, x in the bar. Two strokes that move and turn. */
+.adm-icon {
+  position: relative;
+  display: block;
+  width: var(--space-4);
+  height: var(--space-4);
+  color: var(--ink-2);
+}
+
+.adm-icon i {
+  --len: 0.354rem;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--len);
+  height: 1.25px;
+  margin: -0.625px 0 0 calc(var(--len) / -2);
+  border-radius: 1px;
+  background: currentColor;
+  transition:
+    transform 260ms var(--ease-morph),
+    width 260ms var(--ease-morph),
+    margin 260ms var(--ease-morph);
+}
+
+.adm-icon i:first-child {
+  transform: translateY(-0.125rem) rotate(45deg);
+}
+
+.adm-icon i:last-child {
+  transform: translateY(0.125rem) rotate(-45deg);
+}
+
+.adm-icon[data-x] {
+  color: var(--ink-1);
+}
+
+.adm-icon[data-x] i {
+  --len: 0.8rem;
+}
+
+.adm-icon[data-x] i:first-child {
+  transform: rotate(45deg);
+}
+
+.adm-icon[data-x] i:last-child {
+  transform: rotate(-45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adm-icon i {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .adm-plane {
+    border: 1px solid CanvasText;
+  }
+
+  .adm-icon i {
+    background: CanvasText;
+  }
 }

@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal, flushSync } from 'react-dom';
 import { ADMISSION_ENTRIES, ADMISSION_META, ADMISSION_MODELS } from './admissions.js';
 import { ADMISSION_TEXT, LOCALES, TEXT } from './content.js';
 
@@ -34,7 +35,7 @@ const verdictFor = (profile, entry) => {
 
 // One model at a time. The section starts folded: its heading, the model and the profile stand on
 // one line, and the tables open under them.
-export default function Admissions({ locale }) {
+function AdmissionsBody({ locale }) {
   const [modelName, setModelName] = useState(MODEL_NAMES[0]);
   const [profileName, setProfileName] = useState('natural');
   const [verdict, setVerdict] = useState('similar');
@@ -58,10 +59,7 @@ export default function Admissions({ locale }) {
   }, [profile, profileName, query, verdict, mid]);
 
   return (
-    <details className="detail admissions">
-      <summary className="admission-head">
-        <h2 id="admissions-title"><W k="title" /></h2>
-      </summary>
+    <div className="admissions adm-body">
       <div className="admission-controls">
         <select aria-label={words.chooseModel} value={modelName} onChange={(event) => setModelName(event.target.value)}>
           {MODEL_NAMES.map((name) => <option value={name} key={name}>{name}</option>)}
@@ -119,6 +117,135 @@ export default function Admissions({ locale }) {
         <W k={verdict === 'similar' ? 'similarNote' : 'lineNote'} />{' '}
         <a href={ADMISSION_META.source} target="_blank" rel="noopener noreferrer"><W k="source" /></a>
       </p>
-    </details>
+    </div>
+  );
+}
+
+// The chevron that turns into the close mark: two strokes that move and turn, the same object in
+// both states.
+function Mark({ x }) {
+  return (
+    <span className="adm-icon" data-x={x ? '' : undefined} aria-hidden="true"><i /><i /></span>
+  );
+}
+
+const EASE = 'cubic-bezier(0.2, 0, 0, 1)';
+const SHEET = '(max-width: 48em)';
+const STILL = '(prefers-reduced-motion: reduce)';
+
+// A row in the page that opens the conversions and comparisons. On a wide screen the row's plane
+// grows into a panel on the right, its title and mark travelling with it; on a narrow one the panel
+// rises from the bottom as a sheet. Either way the panel's top bar is the row, and its mark turns
+// from > into ×: pressing the bar closes it, and the panel shrinks back into the row.
+export default function Admissions({ locale }) {
+  const [open, setOpen] = useState(false);
+  const [x, setX] = useState(false);
+  const row = useRef(null);
+  const panel = useRef(null);
+  const plane = useRef(null);
+  const bar = useRef(null);
+  const busy = useRef(false);
+
+  const parts = (root) => ({
+    box: (root.classList.contains('adm-panel') ? root.querySelector('.adm-plane') : root).getBoundingClientRect(),
+    title: root.querySelector('.adm-title').getBoundingClientRect(),
+    icon: root.querySelector('.adm-icon').getBoundingClientRect(),
+  });
+
+  // The page behind stays where it is and cannot be reached while the panel is open.
+  const hold = (on) => {
+    const app = document.querySelector('.app');
+    if (app) app.inert = on;
+    const gutter = innerWidth - document.documentElement.clientWidth;
+    document.documentElement.style.overflow = on ? 'hidden' : '';
+    document.body.style.paddingRight = on && gutter > 0 ? `${gutter}px` : '';
+  };
+
+  function motion(fromRow) {
+    const still = matchMedia(STILL).matches;
+    const sheet = matchMedia(SHEET).matches;
+    const node = panel.current;
+    const body = node.querySelector('.adm-scroll');
+    const scrim = node.previousElementSibling;
+    const dur = still ? 140 : sheet ? 320 : 300;
+    const animations = [];
+    const run = (el, keyframes, options) => animations.push(el.animate(keyframes, { duration: dur, easing: EASE, fill: 'both', ...options }));
+    const there = parts(node);
+    const here = parts(row.current);
+    const dir = fromRow ? 'normal' : 'reverse';
+    run(scrim, [{ opacity: 0 }, { opacity: 1 }], { direction: dir, easing: 'linear' });
+    if (still) {
+      run(node, [{ opacity: 0 }, { opacity: 1 }], { direction: dir, easing: 'linear' });
+    } else if (sheet) {
+      run(node, [{ transform: 'translateY(100%)' }, { transform: 'none' }], { direction: dir });
+    } else {
+      const shift = (a, b) => `translate(${a.left - b.left}px, ${a.top - b.top}px)`;
+      run(plane.current, [
+        { transform: `${shift(here.box, there.box)} scale(${here.box.width / there.box.width}, ${here.box.height / there.box.height})` },
+        { transform: 'none' },
+      ], { direction: dir });
+      run(node.querySelector('.adm-title'), [{ transform: shift(here.title, there.title) }, { transform: 'none' }], { direction: dir });
+      run(node.querySelector('.adm-icon'), [{ transform: shift(here.icon, there.icon) }, { transform: 'none' }], { direction: dir });
+      // The contents arrive once there is room for them, and leave before the plane shrinks.
+      run(body, [{ opacity: 0 }, { opacity: 1 }], fromRow
+        ? { delay: dur * 0.45, duration: dur * 0.55, easing: 'linear' }
+        : { direction: 'reverse', duration: dur * 0.4, easing: 'linear' });
+    }
+    return Promise.all(animations.map((a) => a.finished.catch(() => {})));
+  }
+
+  function show() {
+    if (open || busy.current) return;
+    busy.current = true;
+    flushSync(() => setOpen(true));
+    hold(true);
+    requestAnimationFrame(() => setX(true));
+    bar.current?.focus({ preventScroll: true, focusVisible: false });
+    motion(true).then(() => { busy.current = false; });
+  }
+
+  function hide() {
+    if (!open || busy.current) return;
+    busy.current = true;
+    setX(false);
+    motion(false).then(() => {
+      flushSync(() => setOpen(false));
+      hold(false);
+      busy.current = false;
+      row.current?.focus({ preventScroll: true, focusVisible: false });
+    });
+  }
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const key = (event) => { if (event.key === 'Escape') hide(); };
+    addEventListener('keydown', key);
+    return () => removeEventListener('keydown', key);
+  });
+  useLayoutEffect(() => () => hold(false), []);
+
+  return (
+    <div className="detail rows adm-rows">
+      <button type="button" className="row adm-row" ref={row} data-open={open ? '' : undefined} aria-haspopup="dialog" aria-expanded={open} onClick={show}>
+        <span className="adm-title"><W k="title" /></span>
+        <Mark x={false} />
+      </button>
+      {open && createPortal(
+        <>
+          <div className="adm-scrim" onClick={hide} />
+          <div className="adm-panel" ref={panel} role="dialog" aria-modal="true" aria-labelledby="adm-panel-title" lang={locale}>
+            <div className="adm-plane" ref={plane} />
+            <button type="button" className="adm-bar" ref={bar} onClick={hide} aria-label={ADMISSION_TEXT[locale].close}>
+              <span className="adm-title" id="adm-panel-title"><W k="title" /></span>
+              <Mark x={x} />
+            </button>
+            <div className="adm-scroll">
+              <AdmissionsBody locale={locale} />
+            </div>
+          </div>
+        </>,
+        document.body,
+      )}
+    </div>
   );
 }
