@@ -1563,3 +1563,9 @@ p {
     background: CanvasText;
   }
 }
+
+/* The row is a button: it loses the button's own border and keeps the home page's row. */
+.adm-row {
+  border: 0;
+  cursor: default;
+}
