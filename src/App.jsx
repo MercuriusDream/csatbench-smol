@@ -5,6 +5,7 @@ import {
   BOARD, DEVICES, FAMILIES, FULL, HOME, LINKS, LOCALES, MARK, ROWS, SIZE_TICKS, STARRED, SUBJECTS, TEXT, TREE, UPDATED,
   points, size, sizeAt, ticks,
 } from './content.js';
+import { convertedRows } from './converted.js';
 import { place, steps } from './field.js';
 import { leaveTo } from './veil.js';
 
@@ -240,6 +241,33 @@ function Chart({ view, entries, t }) {
   );
 }
 
+const metrics = ['raw', 'standard', 'mean', 'cumulative'].map(id => ({ id }));
+
+function ConvertedChart({ metric, t }) {
+  const entries = convertedRows(metric);
+  const scale = metric === 'standard' ? Math.ceil(Math.max(...entries.map(row => row.high)) / 50) * 50 : 100;
+  return (
+    <figure className="converted" aria-label={t.views[metric]}>
+      <figcaption className="aside">
+        <T k={metric + 'Note'} />{' '}
+        {metric === 'cumulative' && <a href="https://www.scribd.com/document/1070326852"><T k="cutoffs" /></a>}
+      </figcaption>
+      <ol>
+        {entries.map(row => (
+          <li key={row.name + row.off} style={series(row.family, row.off)}>
+            <span>{row.name} {row.off && <T k="off" />}</span>
+            <span className="metric-track" aria-hidden="true">
+              <span style={{ width: `${row.high / scale * 100}%` }} />
+              <span style={{ width: `${row.low / scale * 100}%` }} />
+            </span>
+            <span className="metric-value">{row.label}</span>
+          </li>
+        ))}
+      </ol>
+    </figure>
+  );
+}
+
 // The dots' own scale for the total. A dot shows a place, not a length, so its scale need not
 // start at nothing: it starts a little under the lowest total, on a round number, and the dots
 // get the room to stand apart.
@@ -396,6 +424,7 @@ function useLocale() {
 }
 
 export default function App() {
+  const [metric, setMetric] = useState('raw');
   const [path, setPath] = useState(['total']);
   const [locale, changeLocale] = useLocale();
   const t = TEXT[locale];
@@ -441,7 +470,8 @@ export default function App() {
             <h2 className="visually-hidden" id="scores-title"><T k="scores" /></h2>
             <div className="chart-head">
               <div className="tab-rows">
-                {rows.map(({ depth, parent, nodes, chosen }) => (
+                <Tabs depth="metric" label={t.scoreShown} views={metrics} value={metric} onChange={setMetric} controls="scores-panel" />
+                {metric === 'raw' && rows.map(({ depth, parent, nodes, chosen }) => (
                   <Tabs
                     key={depth}
                     depth={depth}
@@ -453,7 +483,7 @@ export default function App() {
                   />
                 ))}
               </div>
-              <p className="chart-note">
+              {metric === 'raw' && <p className="chart-note">
                 {DARKER && (
                   <span className="chart-key">
                     <span className="swatch" style={series(DARKER.key, true)} aria-hidden="true" />
@@ -461,10 +491,10 @@ export default function App() {
                   </span>
                 )}
                 <span><T k="outOf" a={view.full} /></span>
-              </p>
+              </p>}
             </div>
-            <div role="tabpanel" id="scores-panel" aria-labelledby={`tab-${last.depth}-${last.chosen ? last.chosen.id : 'all'}`}>
-              <Chart view={view} entries={ranked(view)} t={t} />
+            <div role="tabpanel" id="scores-panel" aria-labelledby={metric !== 'raw' ? `tab-metric-${metric}` : `tab-${last.depth}-${last.chosen ? last.chosen.id : 'all'}`}>
+              {metric === 'raw' ? <Chart view={view} entries={ranked(view)} t={t} /> : <ConvertedChart metric={metric} t={t} />}
             </div>
           </section>
 
