@@ -1362,47 +1362,36 @@ p {
     color-mix(in oklab, var(--series) 40%, transparent) calc(var(--solid) / var(--share) * 100%) 100%);
 }
 
-/* The card a pointer resting on a model shows. It hangs over the bar or the dot, above everything. */
+/* The card a pointer resting on a model shows: the essay page's citation card, one for the page,
+   following the pointer. A raised plane, flat, small corners, no shadow or outline. */
 .bar:focus-visible,
 .dot:focus-visible {
-  outline: none;
+  outline: var(--focus-width) solid var(--signal-focus);
+  outline-offset: 2px;
 }
 
-.tip {
-  position: absolute;
-  bottom: calc(var(--share, var(--y, 0)) * 100% + 2.25rem);
-  left: 50%;
-  z-index: 10;
-  display: none;
-  gap: var(--space-1);
-  min-width: 14rem;
-  padding: var(--space-3);
+.pop {
+  position: fixed;
+  z-index: 20;
+  width: max-content;
+  max-width: min(24rem, calc(100vw - 2.5rem));
+  padding: 0.75rem;
   border-radius: var(--radius);
   color: var(--ink-1);
   background: var(--plane-raised);
-  box-shadow: 0 0 0 1px var(--line), 0 6px 24px oklch(0 0 0 / 0.25);
-  font: var(--text-chart);
-  white-space: nowrap;
-  translate: -50% 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
   pointer-events: none;
+  animation: pop-in 90ms linear;
 }
 
-.dot .tip {
-  bottom: 0.75rem;
+@keyframes pop-in {
+  from { opacity: 0; }
 }
 
-.bar:hover .tip,
-.bar:focus-visible .tip,
-.dot:hover .tip,
-.dot:focus-visible .tip {
+.tip {
   display: grid;
-}
-
-.bar:hover,
-.dot:hover,
-.bar:focus-visible,
-.dot:focus-visible {
-  z-index: 10;
+  gap: var(--space-1);
 }
 
 .tip-name {
@@ -1431,7 +1420,7 @@ p {
 }
 
 @media (forced-colors: active) {
-  .tip {
+  .pop {
     border: 1px solid CanvasText;
   }
 }

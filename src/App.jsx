@@ -191,7 +191,7 @@ const metricEntries = (metric) =>
 // metric, with thinking and without.
 function Tip({ entry, t }) {
   return (
-    <span className="tip" role="tooltip">
+    <span className="tip">
       <span className="tip-name">{entry.name}</span>
       <span className="tip-detail">{[entry.build, `${size(entry.gb)} GB`].filter(Boolean).join(' · ')}</span>
       <span className="tip-rows">
@@ -246,6 +246,7 @@ function Chart({ view, entries, t, full = view.full, name: chartName = t.views[v
                   <li
                     className="bar"
                     key={name}
+                    data-card={entry.name}
                     data-front={both ? (offInFront ? 'off' : 'own') : undefined}
                     tabIndex={0}
                     style={{ ...series(entry.family, entry.offOnly), '--share': Math.max(entry.value, entry.high ?? entry.value) / full, '--solid': entry.value / full, '--front': both ? entry.front / full : 0 }}
@@ -265,7 +266,6 @@ function Chart({ view, entries, t, full = view.full, name: chartName = t.views[v
                     {both && (
                       <span className="bar-fill bar-off" aria-hidden="true" style={{ ...series(entry.family, true), viewTransitionName: `front-${name}` }} />
                     )}
-                    {entry.card && <Tip entry={entry} t={t} />}
                   </li>
                 );
               })}
@@ -338,12 +338,11 @@ function Field({ t, metric }) {
             </div>
             <ol className="dots">
               {MARKS.map((mark, index) => (
-                <li className="dot" key={mark.name} tabIndex={0} data-spot={SPOTS[index]} style={{ ...series(mark.family), '--x': mark.x, '--y': mark.y }}>
+                <li className="dot" key={mark.name} tabIndex={0} data-card={mark.name} data-spot={SPOTS[index]} style={{ ...series(mark.family), '--x': mark.x, '--y': mark.y }}>
                   <span className="dot-name">
                     {mark.name}
                     <span className="visually-hidden">, {size(mark.gb)} GB, {mark.shown}</span>
                   </span>
-                  <Tip entry={mark} t={t} />
                 </li>
               ))}
               {TWINS.map((twin) => (
@@ -443,7 +442,55 @@ function useLocale() {
   return [locale, change];
 }
 
+// One card for every model, as the essay page's citation card: a raised plane that follows the
+// pointer. A tap shows it, a tap elsewhere hides it; keyboard focus shows it beside the mark.
+const CARDS = Object.fromEntries(BOARD.map((entry) => [entry.name, { ...entry, card: card(entry) }]));
+function useCard() {
+  const [at, setAt] = useState(null);
+  const place = (name, x, y) => setAt(name && CARDS[name] ? { name, x, y } : null);
+  const handlers = {
+    onPointerMove: (event) => {
+      const mark = event.target.closest?.('[data-card]');
+      place(mark?.dataset.card, event.clientX, event.clientY);
+    },
+    onPointerLeave: (event) => event.pointerType === 'mouse' && setAt(null),
+    onFocus: (event) => {
+      const mark = event.target.closest?.('[data-card]');
+      if (!mark) return;
+      const box = mark.getBoundingClientRect();
+      place(mark.dataset.card, box.left + box.width / 2, box.top);
+    },
+    onBlur: () => setAt(null),
+  };
+  useLayoutEffect(() => {
+    const away = (event) => { if (!event.target.closest?.('[data-card]')) setAt(null); };
+    document.addEventListener('pointerdown', away);
+    return () => document.removeEventListener('pointerdown', away);
+  }, []);
+  return [at, handlers];
+}
+
+function Card({ at, t }) {
+  const ref = useRef(null);
+  const [pos, setPos] = useState({ left: -9999, top: -9999 });
+  useLayoutEffect(() => {
+    if (!at || !ref.current) return;
+    const w = ref.current.offsetWidth; const h = ref.current.offsetHeight;
+    const gap = 14;
+    const left = Math.min(Math.max(at.x + gap, 8), innerWidth - w - 8);
+    const top = at.y - h - gap >= 8 ? at.y - h - gap : Math.min(at.y + gap, innerHeight - h - 8);
+    setPos({ left: at.x + gap + w > innerWidth - 8 ? Math.max(8, at.x - w - gap) : left, top });
+  }, [at]);
+  if (!at) return null;
+  return (
+    <div className="pop" role="tooltip" ref={ref} style={pos}>
+      <Tip entry={CARDS[at.name]} t={t} />
+    </div>
+  );
+}
+
 export default function App() {
+  const [cardAt, cardHandlers] = useCard();
   const [metric, setMetric] = useState('raw');
   const [path, setPath] = useState(['total']);
   const [locale, changeLocale] = useLocale();
@@ -486,7 +533,7 @@ export default function App() {
           <h1>{MARK}</h1>
 
           {/* The scores come first: one chart, for the total and for each subject. */}
-          <section className="totals" aria-labelledby="scores-title">
+          <section className="totals" aria-labelledby="scores-title" {...cardHandlers}>
             <h2 className="visually-hidden" id="scores-title"><T k="scores" /></h2>
             <div className="chart-head">
               <div className="tab-rows">
@@ -522,7 +569,7 @@ export default function App() {
             </div>
           </section>
 
-          <section className="detail" aria-labelledby="size-title">
+          <section className="detail" aria-labelledby="size-title" {...cardHandlers}>
             <figure className="chart" aria-labelledby="size-title">
               <figcaption className="chart-title">
                 <h2 id="size-title"><T k="byGb" /></h2> <span className="chart-full"><T k="frontier" /></span>
@@ -593,6 +640,8 @@ export default function App() {
           </div>
         </main>
       </div>
+
+      <Card at={cardAt} t={t} />
 
       {/* The same footer as the home page. */}
       <footer className="site-footer">
