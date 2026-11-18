@@ -609,7 +609,7 @@ function Card({ show, t, basis }) {
     const left = Math.min(Math.max(at.x + gap, 8), innerWidth - w - 8);
     const top = at.y - h - gap >= 8 ? at.y - h - gap : Math.min(at.y + gap, innerHeight - h - 8);
     setPos({ left: at.x + gap + w > innerWidth - 8 ? Math.max(8, at.x - w - gap) : left, top });
-  }, [at]);
+  }, [at, tip]);
   if (!at) return null;
   return (
     <div className="pop" role="tooltip" ref={ref} style={pos}>
