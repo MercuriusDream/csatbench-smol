@@ -816,13 +816,15 @@ p {
     gap: var(--space-1) var(--space-3);
   }
 
-  .basis-label,
-  .basis-note {
+  .basis-label {
     font-size: 0.75rem;
-    line-height: 1.5;
   }
 
-  .basis select,
+  .basis .basis-picks select,
+  .basis .basis-source {
+    font-size: 0.75rem;
+  }
+
   .admission-controls select,
   .admission-controls input {
     padding-inline: var(--space-2);
@@ -1500,7 +1502,7 @@ p {
   padding: var(--space-4);
   border-radius: var(--radius);
   background: var(--plane-raised);
-  box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.28), 0 0 0 1px var(--line);
+  box-shadow: 0 0 0 1px var(--line);
   opacity: 0;
   visibility: hidden;
   transform: perspective(60rem) rotateX(-80deg);
@@ -1523,8 +1525,8 @@ p {
   }
 }
 
-/* Inside: a label and a row of tabs on each line, the labels in one column, and for a converted
-   score a sentence under them that says what it is counted on. */
+/* Inside: a label and its choices on each line, the labels in one column. The choices are plain
+   words, with no track and no plane under the chosen one: it is in full ink, the others quieter. */
 .basis {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
@@ -1548,6 +1550,38 @@ p {
   min-width: 0;
 }
 
+.basis .tabs {
+  min-height: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.basis .tabs-plane {
+  display: none;
+}
+
+.basis .tab {
+  min-height: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius);
+}
+
+.basis .tab:first-child {
+  margin-inline-start: calc(var(--space-2) * -1);
+}
+
+.basis .tab[aria-selected='true'] {
+  background: none;
+  color: var(--ink-1);
+}
+
+.basis-source {
+  grid-column: 1 / -1;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+}
+
 .basis-picks {
   display: flex;
   flex-wrap: wrap;
@@ -1555,20 +1589,12 @@ p {
 }
 
 .basis select {
-  min-height: var(--control-height);
   max-width: 100%;
-  padding: 0 var(--space-3);
+  padding: var(--space-1) 0;
   border: 0;
-  border-radius: var(--radius);
   color: var(--ink-1);
-  background: var(--plane-control);
+  background: none;
   font: var(--text-body);
-}
-
-.basis-note {
-  grid-column: 1 / -1;
-  max-width: 48rem;
-  color: var(--ink-2);
 }
 
 /* A value the conversions pin down only to a range: solid to its low end, faint to its high end. */

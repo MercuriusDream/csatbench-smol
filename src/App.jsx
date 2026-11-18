@@ -503,11 +503,8 @@ function Basis({ basis, choose, t }) {
           )}
         </>
       ))}
-      {basis.metric !== 'raw' && (
-        <p className="basis-note">
-          <T k="basisNote" a={shown} />
-          {basis.metric === 'cumulative' && <> <a href="https://www.scribd.com/document/1070326852" target="_blank" rel="noopener noreferrer"><T k="cutoffs" /></a></>}
-        </p>
+      {basis.metric === 'cumulative' && (
+        <a className="basis-source" href="https://www.scribd.com/document/1070326852" target="_blank" rel="noopener noreferrer"><T k="cutoffs" /></a>
       )}
     </div>
   );
