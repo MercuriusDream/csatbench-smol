@@ -202,6 +202,30 @@ html[data-veil] .site-footer {
   opacity: 0;
 }
 
+/* The title goes across with the page (see src/veil.js). While it is carried, copies of it are drawn
+   here over the veil, one in each site's type, and the page's own waits under them. The copies are
+   added together as they cross-fade, as the two pictures of a part are in the home page's morphs,
+   so the title does not thin out halfway. */
+#carried-title {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+#carried-title > span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+  mix-blend-mode: plus-lighter;
+}
+
+html[data-carry] h1 {
+  visibility: hidden;
+}
+
 .stage {
   position: relative;
   flex: 1 0 auto;

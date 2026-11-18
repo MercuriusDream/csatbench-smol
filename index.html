@@ -30,13 +30,99 @@
         const arriving = performance.getEntriesByType('navigation')[0]?.type === 'navigate';
         if (arriving && new URL(document.referrer).origin === 'https://mercuriusdream.com') document.documentElement.dataset.veil = '';
       } catch {}
+      // The row's title may come too, in the address's fragment (see src/veil.js), which comes off
+      // the address at once. It is carried only on that arrival, and only with motion.
+      try {
+        const title = /^#title=(-?[\d.]+),(-?[\d.]+),([\d.]+),(\d+)$/.exec(location.hash);
+        if (title) {
+          history.replaceState(history.state, '', location.pathname + location.search);
+          const root = document.documentElement;
+          if (root.dataset.veil === '' && !matchMedia('(prefers-reduced-motion: reduce)').matches) root.dataset.carry = title.slice(1).join(',');
+        }
+      } catch {}
     </script>
   </head>
   <body>
     <div id="root"></div>
     <script>
-      // One frame of the bare plane, then lift the veil.
-      requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.removeAttribute('data-veil')));
+      // One frame of the bare plane, then lift the veil. A title carried from the home page is drawn
+      // from the first frame where the home page left it, in its size and weight there, and travels
+      // into the page's own as the veil lifts, at the pace the contents arrive. Two copies make the
+      // trip, one in each page's type, and the home page's gives way to this page's on the way.
+      (() => {
+        const root = document.documentElement;
+        let travel = null;
+        try {
+          const note = root.dataset.carry?.split(',').map(Number);
+          const title = note?.every(Number.isFinite) && document.querySelector('h1');
+          const lines = (el) => {
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            return range.getClientRects();
+          };
+          const own = title ? lines(title) : [];
+          if (own.length === 1) {
+            const style = getComputedStyle(title);
+            const layer = document.createElement('div');
+            layer.id = 'carried-title';
+            layer.setAttribute('aria-hidden', 'true');
+            document.body.append(layer);
+            // A copy of the title, with its ink starting at `at`. It scales from where its ink starts.
+            // A moving copy is drawn on whole pixels, so its box is put on whole pixels and its
+            // letters are set off inside it by the rest: they then fall where the title's own do.
+            const draw = (at, size, weight) => {
+              const copy = document.createElement('span');
+              copy.textContent = title.textContent;
+              for (const property of ['font-family', 'font-size', 'font-weight', 'font-style', 'font-stretch', 'font-optical-sizing', 'font-feature-settings', 'font-variation-settings', 'font-kerning', 'line-height', 'letter-spacing', 'word-spacing', 'text-rendering', '-webkit-font-smoothing', 'color']) {
+                copy.style.setProperty(property, style.getPropertyValue(property));
+              }
+              if (size) Object.assign(copy.style, { fontSize: `${size}px`, fontWeight: weight });
+              layer.append(copy);
+              const box = copy.getBoundingClientRect();
+              const ink = lines(copy)[0];
+              const [x, y] = [at[0] - (ink.left - box.left), at[1] - (ink.top - box.top)];
+              const [left, top] = [x, y].map((n) => Math.floor(n * devicePixelRatio) / devicePixelRatio);
+              Object.assign(copy.style, { left: `${left}px`, top: `${top}px`, padding: `${y - top}px 0 0 ${x - left}px`, transformOrigin: `${at[0] - left}px ${at[1] - top}px` });
+              return { copy, height: ink.height };
+            };
+            const to = own[0];
+            const before = draw(note, note[2], note[3]);
+            const after = draw([to.left, to.top]);
+            const k = after.height / before.height;
+            const [x, y] = [to.left - note[0], to.top - note[1]];
+            const start = `translate(${-x}px, ${-y}px) scale(${1 / k})`;
+            Object.assign(after.copy.style, { transform: start, opacity: '0' });
+            // Then the title itself takes over, unless the page is being left by then.
+            const land = () => {
+              if (!layer.isConnected) return;
+              layer.remove();
+              root.removeAttribute('data-carry');
+            };
+            travel = () => {
+              try {
+                // The stylesheet's pace, in whichever unit the build wrote it.
+                const pace = getComputedStyle(root);
+                const veil = pace.getPropertyValue('--dur-veil').trim();
+                const timing = { duration: parseFloat(veil) * (veil.endsWith('ms') ? 1 : 1000), easing: pace.getPropertyValue('--ease-morph').trim(), fill: 'both' };
+                const moving = [
+                  before.copy.animate({ transform: ['none', `translate(${x}px, ${y}px) scale(${k})`], opacity: [1, 0] }, timing),
+                  after.copy.animate({ transform: [start, 'none'], opacity: [0, 1] }, timing),
+                ];
+                Promise.all(moving.map((animation) => animation.finished)).then(land, () => {});
+              } catch {
+                land();
+              }
+            };
+          } else root.removeAttribute('data-carry');
+        } catch {
+          document.getElementById('carried-title')?.remove();
+          root.removeAttribute('data-carry');
+        }
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          root.removeAttribute('data-veil');
+          travel?.();
+        }));
+      })();
     </script>
     <script type="module" src="./src/main.jsx"></script>
   </body>
