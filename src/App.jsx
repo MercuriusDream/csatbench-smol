@@ -5,7 +5,7 @@ import {
   BOARD, DEVICES, FAMILIES, FULL, PAPERS, HOME, LINKS, LOCALES, MARK, ROWS, SIZE_TICKS, STARRED, SUBJECTS, TEXT, TREE, UPDATED,
   points, size, sizeAt, ticks,
 } from './content.js';
-import { METRICS, card, feasible, metricOf } from './converted.js';
+import { METRICS, card, combinationOf, feasible, metricOf } from './converted.js';
 import { place, steps } from './field.js';
 import { leaveTo } from './veil.js';
 
@@ -192,10 +192,12 @@ const metricEntries = (metric, profile) =>
 function Tip({ entry, t, profile, off }) {
   const rows = card(entry, profile).map(({ metric, own, off: o }) => ({ metric, value: off ? o : own })).filter((row) => row.value);
   const lines = feasible(entry, off, profile);
+  const combination = combinationOf(entry, off, profile);
   return (
     <span className="tip">
       <span className="tip-name">{entry.name}{off && <span className="tip-off"> {t.off}</span>}</span>
       <span className="tip-detail">{[entry.build, `${size(entry.gb)} GB`, t.views[`p-${profile}`]].filter(Boolean).join(' · ')}</span>
+      {combination.length > 0 && <span className="tip-detail">{t.basis}: {combination.map((id) => t.views[id]).join(' · ')}</span>}
       <span className="tip-rows">
         {rows.map(({ metric, value }) => (
           <span className="tip-row" key={metric}>
@@ -651,7 +653,7 @@ export default function App() {
                     onChange={(id) => show(id === 'all' ? path.slice(0, depth) : [...path.slice(0, depth), id])}
                     controls="scores-panel"
                   />
-                )) : <p className="chart-metric-note"><T k={metric + 'Note'} />{metric === 'cumulative' && <> <a href="https://www.scribd.com/document/1070326852" target="_blank" rel="noopener noreferrer"><T k="cutoffs" /></a></>}</p>}
+                )).concat(path.join('/') === 'total' ? [<p className="chart-metric-note" key="note"><T k="rawNote" /></p>] : []) : <p className="chart-metric-note"><T k={metric + 'Note'} />{metric === 'cumulative' && <> <a href="https://www.scribd.com/document/1070326852" target="_blank" rel="noopener noreferrer"><T k="cutoffs" /></a></>}</p>}
               </div>
               <div className="chart-side">
                 <MetricSwitch id="" metric={metric} profile={profile} onMetric={chooseMetric} onProfile={chooseProfile} t={t} />

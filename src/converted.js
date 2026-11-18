@@ -73,6 +73,11 @@ export function metricOf(entry, off, metric, profile = 'natural') {
   return converted(entry, off, metric, profile)[0] ?? null;
 }
 
+// The papers a run's converted scores are made of, for a profile: its 국어 and 수학 electives and its two 탐구 subjects.
+export function combinationOf(entry, off, profileName = 'natural') {
+  return ADMISSION_MODELS[keyOf(entry, off)]?.profiles[profileName]?.combination ?? [];
+}
+
 // Every metric for one model, its own run and its thinking-off run, for the hover card.
 export const METRICS = ['raw', 'standard', 'mean', 'cumulative'];
 export function card(entry, profile = 'natural') {
