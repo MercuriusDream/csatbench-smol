@@ -417,14 +417,14 @@ export const BOARD = [
       "earth2": 21,
       "geography-korea": 4,
       "chemistry2": 12,
-      "german": 27,
+      "german": 29,
       "russian": 37,
       "vietnamese": 34,
       "spanish": 37,
       "arabic": 22,
       "japanese": 14,
       "chinese": 27,
-      "french": 29,
+      "french": 31,
       "classical-chinese": 25
     },
     "off": null
