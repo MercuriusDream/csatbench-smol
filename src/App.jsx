@@ -503,10 +503,58 @@ function Basis({ basis, choose, t }) {
           )}
         </>
       ))}
-      <p className="basis-note">
-        <T k="basisNote" a={basis} />
-        {basis.metric === 'cumulative' && <> <a href="https://www.scribd.com/document/1070326852" target="_blank" rel="noopener noreferrer"><T k="cutoffs" /></a></>}
-      </p>
+      {basis.metric !== 'raw' && (
+        <p className="basis-note">
+          <T k="basisNote" a={shown} />
+          {basis.metric === 'cumulative' && <> <a href="https://www.scribd.com/document/1070326852" target="_blank" rel="noopener noreferrer"><T k="cutoffs" /></a></>}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// The settings folded into one chip that says what is chosen. It opens the settings below it, folding
+// down out of the chip as a card turned over; a tap outside or Escape folds them back.
+function BasisMenu({ basis, choose, t }) {
+  const [open, setOpen] = useState(false);
+  const box = useRef(null);
+  useLayoutEffect(() => {
+    if (!open) return undefined;
+    const away = (event) => { if (!box.current?.contains(event.target)) setOpen(false); };
+    const key = (event) => { if (event.key === 'Escape') { setOpen(false); box.current?.querySelector('.basis-chip')?.focus(); } };
+    document.addEventListener('pointerdown', away);
+    document.addEventListener('keydown', key);
+    return () => { document.removeEventListener('pointerdown', away); document.removeEventListener('keydown', key); };
+  }, [open]);
+  const shown = effectiveFor(basis, basis.metric);
+  const summary = (locale) => {
+    const v = TEXT[locale].views;
+    // Only what differs from the score's own default: the averages on the 450-point scale, each
+    // model's best in the converted scores.
+    const plain = basis.metric === 'raw' ? { korean: 'mean', math: 'mean', inquiry: 'four' } : { korean: 'best', math: 'best', inquiry: 'best' };
+    const parts = [v[basis.metric], v[`p-${basis.profile}`]];
+    if (shown.korean !== plain.korean) parts.push(shown.korean === 'best' ? `${v.korean} ${v['b-best']}` : v[`b-${shown.korean}`]);
+    if (shown.math !== plain.math) parts.push(shown.math === 'best' ? `${v.math} ${v['b-best']}` : v[`b-${shown.math}`]);
+    if (shown.inquiry !== plain.inquiry) parts.push(shown.inquiry === 'best' ? `${v.inquiry} ${v['b-two']}` : `${v[basis.pick[0]]}+${v[basis.pick[1]]}`);
+    return parts.join(' · ');
+  };
+  return (
+    <div className="basis-menu" ref={box} data-open={open ? '' : undefined}>
+      <button type="button" className="chip basis-chip" aria-expanded={open} aria-controls="basis-panel" onClick={() => setOpen(!open)}>
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M2 4h7M12 4h2M2 8h2M7 8h7M2 12h9" />
+          <circle cx="10.5" cy="4" r="1.5" />
+          <circle cx="5.5" cy="8" r="1.5" />
+          <circle cx="12.5" cy="12" r="1.5" />
+        </svg>
+        <span className="basis-summary">
+          <span className="visually-hidden"><T k="basisLabel" />: </span>
+          {LOCALES.map((locale) => <span className={locale} lang={locale} key={locale}>{summary(locale)}</span>)}
+        </span>
+      </button>
+      <div className="basis-panel" id="basis-panel" inert={open ? undefined : ''}>
+        <Basis basis={basis} choose={choose} t={t} />
+      </div>
     </div>
   );
 }
@@ -682,7 +730,6 @@ export default function App() {
           {/* The scores come first: one chart, for the total and for each subject. */}
           <section className="totals" aria-labelledby="scores-title" {...cardHandlers}>
             <h2 className="visually-hidden" id="scores-title"><T k="scores" /></h2>
-            <Basis basis={basis} choose={choose} t={t} />
             <div className="chart-head">
               <div className="tab-rows">
                 {metric === 'raw' && rows.map(({ depth, parent, nodes, chosen }) => (
@@ -698,6 +745,7 @@ export default function App() {
                 ))}
               </div>
               <div className="chart-side">
+                <BasisMenu basis={basis} choose={choose} t={t} />
                 <p className="chart-note">
                   {DARKER && (
                     <span className="chart-key">

@@ -43,21 +43,16 @@ export const TEXT = {
     basisLabel: 'Score settings',
     rowMetric: 'Score', rowProfile: 'Track',
     pickFirst: 'First Inquiry subject', pickSecond: 'Second Inquiry subject',
-    // What the scores are counted on, said in one or two sentences.
+    // What a converted score is counted on, in one or two sentences. (The basis it is given has the
+    // averages already turned into each model's best.)
     basisNote: (b) => {
       const v = TEXT.en.views;
       const natural = b.profile === 'natural';
-      const korean = { mean: 'the mean of Speech and Writing and Language and Media', best: 'its higher elective' }[b.korean] ?? v[b.korean];
-      const math = { mean: 'the mean of all three electives', best: natural ? 'the higher of Calculus and Geometry' : 'its highest elective' }[b.math] ?? v[b.math];
+      const korean = b.korean === 'best' ? 'its higher elective' : v[b.korean];
+      const math = b.math === 'best' ? (natural ? 'the higher of Calculus and Geometry' : 'its highest elective') : v[b.math];
       const inquiry = {
-        four: 'twice the mean of Physics I, Chemistry I, Life Science I and Society and Culture',
         best: natural ? 'its two highest Science subjects' : 'its two highest subjects with at least one Social Studies',
       }[b.inquiry] ?? `${v[b.pick[0]]} + ${v[b.pick[1]]}`;
-      if (b.metric === 'raw') {
-        const averaged = b.korean === 'mean' || b.math === 'mean' || b.inquiry === 'four';
-        return `Korean: the common part plus ${korean}. Math: the common part plus ${math}. Inquiry: ${inquiry}.`
-          + (averaged ? ' Averages give CSAT-benchmark’s 450-point scale its decimals.' : '');
-      }
       const lead = {
         standard: 'Korean + Math + two Inquiry standard scores.',
         mean: '(Korean + Math + the two Inquiry subjects’ mean) percentile ÷ 3.',
@@ -128,21 +123,15 @@ export const TEXT = {
     basisLabel: '점수 기준',
     rowMetric: '점수', rowProfile: '계열',
     pickFirst: '탐구 첫째 과목', pickSecond: '탐구 둘째 과목',
-    // 점수를 무엇으로 셌는지, 한두 문장으로.
+    // 환산 점수를 무엇으로 셌는지, 한두 문장으로. (평균은 이미 모델마다 최고로 바뀌어 들어옵니다.)
     basisNote: (b) => {
       const v = TEXT.ko.views;
       const natural = b.profile === 'natural';
-      const korean = { mean: '화작·언매 평균', best: '모델마다 높은 선택과목' }[b.korean] ?? v[b.korean];
-      const math = { mean: '확통·미적·기하 평균', best: natural ? '모델마다 미적·기하 중 높은 쪽' : '모델마다 가장 높은 선택과목' }[b.math] ?? v[b.math];
+      const korean = b.korean === 'best' ? '모델마다 높은 선택과목' : v[b.korean];
+      const math = b.math === 'best' ? (natural ? '모델마다 미적·기하 중 높은 쪽' : '모델마다 가장 높은 선택과목') : v[b.math];
       const inquiry = {
-        four: '물리학Ⅰ·화학Ⅰ·생명과학Ⅰ·사회·문화 평균의 두 배',
         best: natural ? '모델마다 가장 높은 과탐 두 과목' : '모델마다 사탐을 하나 이상 넣은 가장 높은 두 과목',
       }[b.inquiry] ?? `${v[b.pick[0]]} + ${v[b.pick[1]]}`;
-      if (b.metric === 'raw') {
-        const averaged = b.korean === 'mean' || b.math === 'mean' || b.inquiry === 'four';
-        return `국어는 공통 + ${korean}, 수학은 공통 + ${math}, 탐구는 ${inquiry}입니다.`
-          + (averaged ? ' 평균이 들어간 CSAT-benchmark 450점 환산이라 소수점이 있습니다.' : '');
-      }
       const lead = {
         standard: '국어, 수학, 탐구 두 과목의 표준점수 합계.',
         mean: '(국어 백분위 + 수학 백분위 + 탐구 두 과목 평균 백분위) ÷ 3.',

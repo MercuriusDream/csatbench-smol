@@ -1458,16 +1458,78 @@ p {
   margin-inline-start: auto;
 }
 
-/* The settings every score is counted on: a label and a row of tabs on each line, the labels in one
-   column. What the scores are then counted on is said under them, in a sentence. */
+/* The settings, folded into one chip at the end of the chart's head that says what is chosen. Open,
+   they hang under it on a raised plane, turned down out of the chip as a card is turned over, and
+   turned back up when they close. */
+.basis-menu {
+  position: relative;
+}
+
+.basis-chip {
+  gap: var(--space-2);
+  max-width: min(26rem, 100%);
+  background: var(--plane-control);
+  text-align: start;
+}
+
+.basis-chip:hover {
+  background: var(--plane-control-hover);
+}
+
+.basis-chip svg {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.basis-menu[data-open] .basis-chip {
+  background: var(--plane-selected);
+}
+
+.basis-panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: min(40rem, calc(100vw - 2 * var(--edge)));
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  background: var(--plane-raised);
+  box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.28), 0 0 0 1px var(--line);
+  opacity: 0;
+  visibility: hidden;
+  transform: perspective(60rem) rotateX(-80deg);
+  transform-origin: top center;
+  transition: transform 280ms var(--ease-morph), opacity 180ms linear, visibility 0s linear 280ms;
+}
+
+.basis-menu[data-open] .basis-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: transform 320ms var(--ease-morph), opacity 120ms linear, visibility 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .basis-panel,
+  .basis-menu[data-open] .basis-panel {
+    transform: none;
+    transition: opacity 90ms linear, visibility 0s linear 90ms;
+  }
+}
+
+/* Inside: a label and a row of tabs on each line, the labels in one column, and for a converted
+   score a sentence under them that says what it is counted on. */
 .basis {
   display: grid;
-  justify-self: stretch;
-  width: 100%;
   grid-template-columns: max-content minmax(0, 1fr);
   align-items: center;
   gap: var(--space-2) var(--space-4);
-  margin-bottom: var(--space-5);
 }
 
 .basis-row {
