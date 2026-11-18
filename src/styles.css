@@ -767,13 +767,102 @@ p {
     outline-offset: calc(var(--focus-width) * -1);
   }
 
+  .scroller {
+    position: relative;
+  }
+
   .plot .sheet {
-    min-width: calc(var(--lead) + var(--count) * 3.25rem);
+    min-width: calc(var(--lead) + var(--count) * 1.75rem);
     padding-inline-start: var(--lead);
   }
 
   .field .sheet {
-    min-width: 40rem;
+    min-width: 20rem;
+  }
+}
+
+/* A phone: the page uses its width, and the charts are drawn smaller to fit it. */
+@media (max-width: 40em) {
+  /* The axis numbers take less room, and the first slanted name hangs into the empty space under them. */
+  .plot,
+  .field {
+    --gutter: 1.75rem;
+  }
+
+  .axis-label {
+    inset-inline-end: var(--space-1);
+  }
+
+  .plot .sheet {
+    min-width: calc(var(--count) * 1.5rem);
+    padding-inline-start: 0;
+    padding-bottom: calc(var(--longest) * 0.28em + 1.75em);
+  }
+
+  .scroller {
+    overflow: visible;
+  }
+
+  .bar {
+    --bar-width: 82%;
+  }
+
+  /* A range is wider than a column here, so it breaks after its dash: the two ends one over the
+     other. The number written on the bar hangs from the top of its part, however many lines it takes. */
+  .bar-value {
+    width: min-content;
+    font-size: 0.625rem;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+    line-break: auto;
+  }
+
+  .bar-value.inside {
+    bottom: calc(var(--share) * 100%);
+    translate: -50% calc(100% + 0.125rem);
+  }
+
+  .bar-value.off.inside {
+    bottom: calc(var(--front) * 100%);
+  }
+
+  .bar-model,
+  .axis-label,
+  .dot-name,
+  .size-gb,
+  .size-devices {
+    font-size: 0.6875rem;
+  }
+
+  .field {
+    --field-height: 16rem;
+  }
+
+  .field .sheet {
+    min-width: 0;
+    padding-inline-end: var(--space-3);
+  }
+
+  /* Sizes close together on the scale: their devices, smaller and tighter, stay apart. */
+  .size-devices {
+    display: flex;
+    gap: 0.4em;
+    font-size: 0.625rem;
+  }
+
+  .size-devices > span + span::before {
+    content: '·';
+    margin-inline-end: 0.4em;
+    color: var(--ink-2);
+  }
+
+  /* A size's devices now share one line, about twice the longest single name. */
+  .sizes {
+    height: calc(2em + var(--longest) * 0.62em);
   }
 }
 
@@ -1019,14 +1108,24 @@ p {
 
 @media (max-width: 40em) {
   :root {
-    --edge: 2rem;
+    --edge: 1rem;
   }
 }
 
-/* The narrowest screens give the rows a little more width. */
+/* The narrowest phones: the bars take whatever width there is, and their numbers are smaller still. */
 @media (max-width: 22.5em) {
-  :root {
-    --edge: 1.5rem;
+  .plot,
+  .field {
+    --gutter: 1.5rem;
+  }
+
+  .plot .sheet {
+    min-width: 0;
+  }
+
+  .bar-value {
+    font-size: 0.5625rem;
+    letter-spacing: -0.05em;
   }
 }
 
@@ -1174,6 +1273,7 @@ p {
 }
 
 .admission-table-wrap {
+  position: relative;
   max-width: 100%;
   overflow-x: auto;
 }
@@ -1572,6 +1672,7 @@ p {
 
 /* The table of all scores. Wide: it moves sideways in its own region, the model held at the left. */
 .score-table-wrap {
+  position: relative;
   margin-inline: calc(var(--inset-control-compact) * -1);
   overflow-x: auto;
   overscroll-behavior-x: contain;
