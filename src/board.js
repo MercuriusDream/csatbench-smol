@@ -1,5 +1,5 @@
 // Written by the board generator from the graded results. Scores only.
-export const UPDATED = '2026-11-18';
+export const UPDATED = '2026-11-19';
 export const FULL = 450;
 export const SUBJECTS = [{"name": "Korean", "full": 100}, {"name": "Math", "full": 100}, {"name": "English", "full": 100}, {"name": "History", "full": 50}, {"name": "Inquiry", "full": 100}];
 export const PAPERS = {"korean-common": 76, "korean-speech": 24, "korean-language": 24, "math-common": 74, "math-probability": 26, "math-calculus": 26, "math-geometry": 26, "english": 100, "history": 50, "physics1": 50, "chemistry1": 50, "biology1": 50, "socioculture": 50, "earth1": 50, "physics2": 50, "chemistry2": 50, "biology2": 50, "earth2": 50, "ethics-life": 50, "ethics-thought": 50, "geography-korea": 50, "geography-world": 50, "history-eastasia": 50, "history-world": 50, "economics": 50, "politics-law": 50, "work-life": 50, "agriculture": 50, "industry": 50, "commerce": 50, "fisheries": 50, "human-development": 50, "german": 50, "french": 50, "spanish": 50, "chinese": 50, "japanese": 50, "russian": 50, "arabic": 50, "vietnamese": 50, "classical-chinese": 50};
