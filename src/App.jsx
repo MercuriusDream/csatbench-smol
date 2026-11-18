@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import Admissions from './Admissions.jsx';
 import {
@@ -558,9 +558,12 @@ function BasisMenu({ basis, choose, t }) {
 
 // One card for every model, as the essay page's citation card: a raised plane that follows the
 // pointer. A tap shows it, a tap elsewhere hides it; keyboard focus shows it beside the mark.
+// Where the card is changes with every move of the pointer, so that is the card's own state, and a
+// move draws the card again and nothing else. The marks reach it through `show`.
 const CARDS = Object.fromEntries(BOARD.map((entry) => [entry.name, entry]));
 function useCard() {
-  const [at, setAt] = useState(null);
+  const show = useRef(() => {});
+  const setAt = (at) => show.current(at);
   const place = (name, x, y, off) => setAt(name && CARDS[name] ? { name, x, y, off } : null);
   const handlers = {
     onPointerMove: (event) => {
@@ -579,17 +582,25 @@ function useCard() {
     },
     onBlur: () => setAt(null),
   };
+  return [show, handlers];
+}
+
+function Card({ show, t, basis }) {
+  const [at, setAt] = useState(null);
   useLayoutEffect(() => {
+    show.current = setAt;
     const away = (event) => { if (!event.target.closest?.('[data-card]')) setAt(null); };
     document.addEventListener('pointerdown', away);
     return () => document.removeEventListener('pointerdown', away);
-  }, []);
-  return [at, handlers];
-}
-
-function Card({ at, t, basis }) {
+  }, [show]);
   const ref = useRef(null);
   const [pos, setPos] = useState({ left: -9999, top: -9999 });
+  // What the card says changes only with its model, the run, the basis and the language; a move of
+  // the pointer only moves it.
+  const tip = useMemo(
+    () => at && <Tip entry={CARDS[at.name]} t={t} basis={basis} off={Boolean(at.off)} />,
+    [at?.name, at?.off, t, basis],
+  );
   useLayoutEffect(() => {
     if (!at || !ref.current) return;
     const w = ref.current.offsetWidth; const h = ref.current.offsetHeight;
@@ -601,7 +612,7 @@ function Card({ at, t, basis }) {
   if (!at) return null;
   return (
     <div className="pop" role="tooltip" ref={ref} style={pos}>
-      <Tip entry={CARDS[at.name]} t={t} basis={basis} off={Boolean(at.off)} />
+      {tip}
     </div>
   );
 }
@@ -675,7 +686,7 @@ function ScoreTable({ t, basis }) {
 }
 
 export default function App() {
-  const [cardAt, cardHandlers] = useCard();
+  const [cardShow, cardHandlers] = useCard();
   // The basis every score is counted on. A change moves the bars to their new heights and places.
   const [basis, setBasis] = useState(BASIS);
   const { metric, profile } = basis;
@@ -802,7 +813,7 @@ export default function App() {
         </main>
       </div>
 
-      <Card at={cardAt} t={t} basis={basis} />
+      <Card show={cardShow} t={t} basis={basis} />
 
       {/* The same footer as the home page. */}
       <footer className="site-footer">
