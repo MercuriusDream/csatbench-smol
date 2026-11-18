@@ -20,6 +20,9 @@ export const TEXT = {
     views: {
       raw: '450-point scale', standard: 'Standard score', mean: 'Mean percentile', cumulative: 'Top %',
       'p-natural': 'Science track', 'p-humanities': 'Humanities track',
+      'b-mean': 'Average', 'b-best': 'Best', 'b-four': 'Average of four', 'b-two': 'Best two', 'b-pick': 'Choose',
+      'b-korean-speech': 'Speech', 'b-korean-language': 'Language',
+      'b-math-probability': 'Statistics', 'b-math-calculus': 'Calculus', 'b-math-geometry': 'Geometry',
       total: 'All', korean: 'Korean', math: 'Math', english: 'English', history: 'History', inquiry: 'Inquiry', all: 'All',
       'korean-common': 'Common', 'korean-speech': 'Speech and Writing', 'korean-language': 'Language and Media',
       'math-common': 'Common', 'math-probability': 'Probability and Statistics', 'math-calculus': 'Calculus', 'math-geometry': 'Geometry',
@@ -36,11 +39,34 @@ export const TEXT = {
       russian: 'Russian I', arabic: 'Arabic I', vietnamese: 'Vietnamese I', 'classical-chinese': 'Classical Chinese I',
     },
     top3: 'Highest 2026 70% lines its mean percentile clears', top3Off: 'without thinking',
-    rawNote: 'Korean and Math: the common part plus the mean of every elective. Inquiry: twice the mean of Physics I, Chemistry I, Life Science I and Society and Culture. CSAT-benchmark’s 450-point scale, which is why it has decimals.',
-    standardNote: 'Korean + Math + two Inquiry standard scores, in the electives that give each model its highest mean percentile.',
-    basis: 'Electives',
-    meanNote: 'Average of Korean, Math and the two-paper Inquiry mean percentile, in the electives that give each model its highest.',
-    cumulativeNote: 'Estimated top % by combined standard score, science profile only. Smaller is better.',
+    basis: 'Papers',
+    basisLabel: 'Score settings',
+    rowMetric: 'Score', rowProfile: 'Track',
+    pickFirst: 'First Inquiry subject', pickSecond: 'Second Inquiry subject',
+    // What the scores are counted on, said in one or two sentences.
+    basisNote: (b) => {
+      const v = TEXT.en.views;
+      const natural = b.profile === 'natural';
+      const korean = { mean: 'the mean of Speech and Writing and Language and Media', best: 'its higher elective' }[b.korean] ?? v[b.korean];
+      const math = { mean: 'the mean of all three electives', best: natural ? 'the higher of Calculus and Geometry' : 'its highest elective' }[b.math] ?? v[b.math];
+      const inquiry = {
+        four: 'twice the mean of Physics I, Chemistry I, Life Science I and Society and Culture',
+        best: natural ? 'its two highest Science subjects' : 'its two highest subjects with at least one Social Studies',
+      }[b.inquiry] ?? `${v[b.pick[0]]} + ${v[b.pick[1]]}`;
+      if (b.metric === 'raw') {
+        const averaged = b.korean === 'mean' || b.math === 'mean' || b.inquiry === 'four';
+        return `Korean: the common part plus ${korean}. Math: the common part plus ${math}. Inquiry: ${inquiry}.`
+          + (averaged ? ' Averages give CSAT-benchmark’s 450-point scale its decimals.' : '');
+      }
+      const lead = {
+        standard: 'Korean + Math + two Inquiry standard scores.',
+        mean: '(Korean + Math + the two Inquiry subjects’ mean) percentile ÷ 3.',
+        cumulative: 'Estimated top % from the standard-score sum, science track only. Smaller is better.',
+      }[b.metric];
+      const best = b.korean === 'best' || b.math === 'best' || b.inquiry === 'best';
+      return `${lead} Korean ${korean}, Math ${math}, Inquiry ${inquiry}`
+        + (best ? ', each model’s highest by percentile.' : '.');
+    },
     cutoffs: 'Megastudy 2026 rank bands, p. 17',
     partsOf: (name) => `Part of ${name} shown`,
     outOf: (full) => `out of ${full}`,
@@ -79,6 +105,9 @@ export const TEXT = {
     views: {
       raw: '450점 환산', standard: '표점', mean: '평백', cumulative: '누백',
       'p-natural': '자연형', 'p-humanities': '인문형',
+      'b-mean': '평균', 'b-best': '최고', 'b-four': '4과목 평균', 'b-two': '최고 두 과목', 'b-pick': '직접 선택',
+      'b-korean-speech': '화작', 'b-korean-language': '언매',
+      'b-math-probability': '확통', 'b-math-calculus': '미적', 'b-math-geometry': '기하',
       total: '전체', korean: '국어', math: '수학', english: '영어', history: '한국사', inquiry: '탐구', all: '전체',
       'korean-common': '공통', 'korean-speech': '화법과 작문', 'korean-language': '언어와 매체',
       'math-common': '공통', 'math-probability': '확률과 통계', 'math-calculus': '미적분', 'math-geometry': '기하',
@@ -95,11 +124,34 @@ export const TEXT = {
       russian: '러시아어Ⅰ', arabic: '아랍어Ⅰ', vietnamese: '베트남어Ⅰ', 'classical-chinese': '한문Ⅰ',
     },
     top3: '평백이 넘는 가장 높은 2026 70% 선', top3Off: 'Thinking 끔',
-    rawNote: '국어·수학은 공통에 선택과목 전부의 평균을 더하고, 탐구는 물리학Ⅰ·화학Ⅰ·생명과학Ⅰ·사회·문화 평균의 두 배입니다. CSAT-benchmark의 450점 환산이라 소수점이 있습니다.',
-    standardNote: '국어, 수학, 탐구 두 과목의 표준점수 합계. 과목은 모델마다 평백이 가장 높은 조합입니다.',
     basis: '과목',
-    meanNote: '(국어 백분위 + 수학 백분위 + 탐구 두 과목 평균 백분위) ÷ 3. 과목은 모델마다 평백이 가장 높은 조합입니다.',
-    cumulativeNote: '표준점수 합계로 추정한 상위 누적 비율입니다(자연형만). 작을수록 상위권입니다.',
+    basisLabel: '점수 기준',
+    rowMetric: '점수', rowProfile: '계열',
+    pickFirst: '탐구 첫째 과목', pickSecond: '탐구 둘째 과목',
+    // 점수를 무엇으로 셌는지, 한두 문장으로.
+    basisNote: (b) => {
+      const v = TEXT.ko.views;
+      const natural = b.profile === 'natural';
+      const korean = { mean: '화작·언매 평균', best: '모델마다 높은 선택과목' }[b.korean] ?? v[b.korean];
+      const math = { mean: '확통·미적·기하 평균', best: natural ? '모델마다 미적·기하 중 높은 쪽' : '모델마다 가장 높은 선택과목' }[b.math] ?? v[b.math];
+      const inquiry = {
+        four: '물리학Ⅰ·화학Ⅰ·생명과학Ⅰ·사회·문화 평균의 두 배',
+        best: natural ? '모델마다 가장 높은 과탐 두 과목' : '모델마다 사탐을 하나 이상 넣은 가장 높은 두 과목',
+      }[b.inquiry] ?? `${v[b.pick[0]]} + ${v[b.pick[1]]}`;
+      if (b.metric === 'raw') {
+        const averaged = b.korean === 'mean' || b.math === 'mean' || b.inquiry === 'four';
+        return `국어는 공통 + ${korean}, 수학은 공통 + ${math}, 탐구는 ${inquiry}입니다.`
+          + (averaged ? ' 평균이 들어간 CSAT-benchmark 450점 환산이라 소수점이 있습니다.' : '');
+      }
+      const lead = {
+        standard: '국어, 수학, 탐구 두 과목의 표준점수 합계.',
+        mean: '(국어 백분위 + 수학 백분위 + 탐구 두 과목 평균 백분위) ÷ 3.',
+        cumulative: '표준점수 합계로 추정한 상위 누적 비율(자연형만). 작을수록 상위권입니다.',
+      }[b.metric];
+      const best = b.korean === 'best' || b.math === 'best' || b.inquiry === 'best';
+      return `${lead} 국어 ${korean}, 수학 ${math}, 탐구 ${inquiry}`
+        + (best ? '이고, "모델마다"는 백분위가 가장 높은 과목입니다.' : '입니다.');
+    },
     cutoffs: '메가스터디 2026 정시 자료집 17쪽',
     partsOf: (name) => `${name}에서 표시할 부분`,
     outOf: (full) => `${full}점 만점`,

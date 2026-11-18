@@ -5,7 +5,9 @@ import {
   BOARD, DEVICES, FAMILIES, FULL, PAPERS, HOME, LINKS, LOCALES, MARK, ROWS, SIZE_TICKS, STARRED, SUBJECTS, TEXT, TREE, UPDATED,
   points, size, sizeAt, ticks,
 } from './content.js';
-import { METRICS, card, combinationOf, feasible, metricOf } from './converted.js';
+import {
+  BASIS, KOREAN, METRICS, card, effectiveFor, feasible, firstsFor, fit, mathsFor, metricOf, rawPick, secondsFor, usedOf,
+} from './converted.js';
 import { place, steps } from './field.js';
 import { leaveTo } from './veil.js';
 
@@ -86,11 +88,13 @@ function levels(path) {
 const word = (entry) => entry.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 // The board's models with one view's scores, highest first. Models level on a score keep the
-// order of their totals.
-const ranked = (view) =>
-  BOARD.flatMap((entry) => {
-    const own = view.pick(entry);
-    const front = entry.off ? view.pick(entry.off) : null;
+// order of their totals. The total and the subjects it is made of are counted on the basis chosen
+// above the chart; a single paper is that paper's score.
+const ranked = (view, basis) => {
+  const pick = rawPick(view.id, basis) ?? view.pick;
+  return BOARD.flatMap((entry) => {
+    const own = pick(entry);
+    const front = entry.off ? pick(entry.off) : null;
     if (Number.isFinite(own)) return [{ ...entry, value: own, front: Number.isFinite(front) ? front : null }];
     // An add-on paper may be finished only in the thinking-off run so far. Show that score as
     // one darker bar instead of dropping it because the thinking-on run has not reached it yet.
@@ -98,6 +102,7 @@ const ranked = (view) =>
     return [];
   })
     .sort((a, b) => b.value - a.value);
+};
 
 // A chart keeps its form on every screen. Where the screen is too narrow for it, the chart is
 // moved sideways inside its own region, and that region can then be reached and named.
@@ -177,27 +182,33 @@ function Tabs({ label, views, value, onChange, controls, depth }) {
 // The board's models with one metric's whole-exam value, best first (smallest first for 누백,
 // where smaller is better). A value pinned down only to a range is drawn solid to its low end and
 // faint to its high end.
-const metricEntries = (metric, profile) =>
-  BOARD.flatMap((entry) => {
-    const own = metricOf(entry, false, metric, profile);
-    const off = entry.off ? metricOf(entry, true, metric, profile) : null;
+const metricEntries = (basis) => {
+  const { metric } = basis;
+  return BOARD.flatMap((entry) => {
+    const own = metricOf(entry, false, metric, basis);
+    const off = entry.off ? metricOf(entry, true, metric, basis) : null;
     const base = { ...entry };
     if (own) return [{ ...base, value: own.low, high: own.high, label: own.label, front: off ? off.low : null, frontHigh: off ? off.high : null, frontLabel: off ? off.label : null }];
     if (off) return [{ ...base, value: off.low, high: off.high, label: off.label, front: null, offOnly: true }];
     return [];
   }).sort((a, b) => (metric === 'cumulative' ? a.value - b.value : b.value - a.value));
+};
 
 // What a pointer resting on a model shows: its build and size, and its whole-exam score in every
 // metric, with thinking and without.
-function Tip({ entry, t, profile, off }) {
-  const rows = card(entry, profile).map(({ metric, own, off: o }) => ({ metric, value: off ? o : own })).filter((row) => row.value);
-  const lines = feasible(entry, off, profile);
-  const combination = combinationOf(entry, off, profile);
+function Tip({ entry, t, basis, off }) {
+  const { profile } = basis;
+  const rows = card(entry, basis).map(({ metric, own, off: o }) => ({ metric, value: off ? o : own })).filter((row) => row.value);
+  const lines = feasible(entry, off, basis);
+  const used = usedOf(entry, off, basis);
+  const elective = (subject, id) => (id === 'mean' ? `${t.views[subject]} ${t.views['b-mean']}` : t.views[`b-${id}`]);
+  const papers = used ? [elective('korean', used.korean), elective('math', used.math),
+    used.inquiry === 'four' ? `${t.views.inquiry} ${t.views['b-four']}` : used.inquiry.map((id) => t.views[id]).join(' + ')] : [];
   return (
     <span className="tip">
       <span className="tip-name">{entry.name}{off && <span className="tip-off"> {t.off}</span>}</span>
       <span className="tip-detail">{[entry.build, `${size(entry.gb)} GB`, t.views[`p-${profile}`]].filter(Boolean).join(' · ')}</span>
-      {combination.length > 0 && <span className="tip-detail">{t.basis}: {combination.map((id) => t.views[id]).join(' · ')}</span>}
+      {papers.length > 0 && <span className="tip-detail">{t.basis}: {papers.join(' · ')}</span>}
       <span className="tip-rows">
         {rows.map(({ metric, value }) => (
           <span className="tip-row" key={metric}>
@@ -291,14 +302,13 @@ function Chart({ view, entries, t, full = view.full, name: chartName = t.views[v
   );
 }
 
-const metrics = METRICS.map((id) => ({ id }));
-
 // The dots' scale for a metric. A dot shows a place, not a length, so the scale need not start at
 // nothing: it starts a little under the lowest value, on a round number. For 누백, where smaller
 // is better, the scale is turned over so that better is still up.
 const LONGEST_DEVICE = Math.max(...DEVICES.map((device) => device.name.length));
-function fieldOf(metric, profile) {
-  const rows = BOARD.map((entry) => ({ entry, own: metricOf(entry, false, metric, profile), off: entry.off ? metricOf(entry, true, metric, profile) : null }));
+function fieldOf(basis) {
+  const { metric } = basis;
+  const rows = BOARD.map((entry) => ({ entry, own: metricOf(entry, false, metric, basis), off: entry.off ? metricOf(entry, true, metric, basis) : null }));
   const values = rows.flatMap((row) => [row.own?.low, row.off?.low]).filter(Number.isFinite);
   let lo; let hi; let step; let up;
   if (metric === 'cumulative') {
@@ -319,9 +329,9 @@ function fieldOf(metric, profile) {
 
 // Totals against the size of the weights, as dots, with the devices that have that much memory
 // named under the sizes.
-function Field({ t, metric, profile }) {
+function Field({ t, basis }) {
   const [region, sideways] = useSideways();
-  const { lines: FIELD_TICKS, up, marks: MARKS, twins: TWINS, spots: SPOTS, line: LINE } = fieldOf(metric, profile);
+  const { lines: FIELD_TICKS, up, marks: MARKS, twins: TWINS, spots: SPOTS, line: LINE } = fieldOf(basis);
   return (
     <div className="field">
       <div className="axis" aria-hidden="true">
@@ -456,14 +466,47 @@ function useLocale() {
   return [locale, change];
 }
 
-// The metric and profile switch. Both top charts carry one, and both follow the same choice.
-function MetricSwitch({ id, metric, profile, onMetric, onProfile, t }) {
+// The settings every score on the page is counted on, chosen once for every model: the score, the
+// track, the 국어 and 수학 electives and the 탐구 subjects. Each row is a row of tabs. The averages
+// belong to the 450-point scale only; in the converted scores the row shows each model's best.
+const metrics = METRICS.map((id) => ({ id }));
+const INQUIRY_TAB = { four: 'b-four', best: 'b-two', pick: 'b-pick' };
+const INQUIRY_OF = { 'b-four': 'four', 'b-two': 'best', 'b-pick': 'pick' };
+function Basis({ basis, choose, t }) {
+  const raw = basis.metric === 'raw';
+  const shown = effectiveFor(basis, basis.metric);
+  const tabs = (ids) => ids.map((id) => ({ id: `b-${id}` }));
+  const row = (label, control) => (
+    <div className="basis-row">
+      <span className="basis-label">{label}</span>
+      <div className="basis-control">{control}</div>
+    </div>
+  );
   return (
-    <div className="metric-switch">
-      <Tabs depth={`metric${id}`} label={t.scoreShown} views={metrics} value={metric} onChange={onMetric} controls="scores-panel" />
-      {metric !== 'raw' && (
-        <Tabs depth={`profile${id}`} label={t.scoreShown} views={[{ id: 'p-natural' }, { id: 'p-humanities' }]} value={`p-${profile}`} onChange={(v) => onProfile(v.slice(2))} controls="scores-panel" />
-      )}
+    <div className="basis" role="group" aria-label={t.basisLabel}>
+      {row(<T k="rowMetric" />, <Tabs depth="b-metric" label={t.rowMetric} views={metrics} value={basis.metric} onChange={(id) => choose({ metric: id })} controls="scores-panel" />)}
+      {row(<T k="rowProfile" />, <Tabs depth="b-profile" label={t.rowProfile} views={[{ id: 'p-natural' }, { id: 'p-humanities' }]} value={`p-${basis.profile}`} onChange={(id) => choose({ profile: id.slice(2) })} controls="scores-panel" />)}
+      {row(<Ti k="subjects" i={0} />, <Tabs key={`k${raw}`} depth="b-korean" label={t.subjects[0]} views={tabs([...(raw ? ['mean'] : []), ...KOREAN, 'best'])} value={`b-${shown.korean}`} onChange={(id) => choose({ korean: id.slice(2) })} controls="scores-panel" />)}
+      {row(<Ti k="subjects" i={1} />, <Tabs key={`m${raw}${basis.profile}`} depth="b-math" label={t.subjects[1]} views={tabs([...(raw ? ['mean'] : []), ...mathsFor(basis.profile), 'best'])} value={`b-${shown.math}`} onChange={(id) => choose({ math: id.slice(2) })} controls="scores-panel" />)}
+      {row(<Ti k="subjects" i={4} />, (
+        <>
+          <Tabs key={`i${raw}`} depth="b-inquiry" label={t.subjects[4]} views={(raw ? ['b-four', 'b-two', 'b-pick'] : ['b-two', 'b-pick']).map((id) => ({ id }))} value={INQUIRY_TAB[shown.inquiry]} onChange={(id) => choose({ inquiry: INQUIRY_OF[id] })} controls="scores-panel" />
+          {shown.inquiry === 'pick' && (
+            <span className="basis-picks">
+              <select aria-label={t.pickFirst} value={basis.pick[0]} onChange={(event) => choose({ pick: [event.target.value, basis.pick[1]] })}>
+                {firstsFor(basis.profile).map((id) => <option key={id} value={id}>{t.views[id]}</option>)}
+              </select>
+              <select aria-label={t.pickSecond} value={basis.pick[1]} onChange={(event) => choose({ pick: [basis.pick[0], event.target.value] })}>
+                {secondsFor(basis.profile).filter((id) => id !== basis.pick[0]).map((id) => <option key={id} value={id}>{t.views[id]}</option>)}
+              </select>
+            </span>
+          )}
+        </>
+      ))}
+      <p className="basis-note">
+        <T k="basisNote" a={basis} />
+        {basis.metric === 'cumulative' && <> <a href="https://www.scribd.com/document/1070326852" target="_blank" rel="noopener noreferrer"><T k="cutoffs" /></a></>}
+      </p>
     </div>
   );
 }
@@ -499,7 +542,7 @@ function useCard() {
   return [at, handlers];
 }
 
-function Card({ at, t, profile }) {
+function Card({ at, t, basis }) {
   const ref = useRef(null);
   const [pos, setPos] = useState({ left: -9999, top: -9999 });
   useLayoutEffect(() => {
@@ -513,14 +556,14 @@ function Card({ at, t, profile }) {
   if (!at) return null;
   return (
     <div className="pop" role="tooltip" ref={ref} style={pos}>
-      <Tip entry={CARDS[at.name]} t={t} profile={profile} off={Boolean(at.off)} />
+      <Tip entry={CARDS[at.name]} t={t} basis={basis} off={Boolean(at.off)} />
     </div>
   );
 }
 
 // The table of all scores: every paper's raw score, grouped by subject (국어 and 수학 by their
 // common part and each elective, 탐구 paper by paper), the 450-point total, and the converted 표점,
-// 평백 and 누백 for the profile chosen above. It is wide, so it moves sideways inside its own
+// 평백 and 누백, all on the basis chosen above. It is wide, so it moves sideways inside its own
 // region, with the model's name held at the left.
 const TABLE_GROUPS = [
   ['korean', ['korean-common', 'korean-speech', 'korean-language']],
@@ -533,7 +576,7 @@ const TABLE_GROUPS = [
 ].map(([id, papers]) => [id, papers.filter((paper) => paper in PAPERS)]).filter(([, papers]) => papers.length);
 const SHORT = { 'korean-common': 'common', 'math-common': 'common' };
 
-function ScoreTable({ t, profile }) {
+function ScoreTable({ t, basis }) {
   const [region, sideways] = useSideways();
   const rows = BOARD.flatMap((entry) => (entry.off ? [[entry, false], [entry, true]] : [[entry, false]]));
   const value = (entry, off, paper) => (off ? entry.off?.papers?.[paper] : entry.papers?.[paper]);
@@ -574,10 +617,9 @@ function ScoreTable({ t, profile }) {
                 const v = value(entry, off, paper);
                 return <td key={paper}>{Number.isFinite(v) ? points(v) : '—'}</td>;
               }))}
-              <td className="st-total">{points(off ? entry.off.total : entry.total)}</td>
-              {['standard', 'mean', 'cumulative'].map((metric) => {
-                const m = metricOf(entry, off, metric, profile);
-                return <td key={metric}>{m ? m.label : '—'}</td>;
+              {METRICS.map((metric) => {
+                const m = metricOf(entry, off, metric, basis);
+                return <td key={metric} className={metric === 'raw' ? 'st-total' : undefined}>{m ? m.label : '—'}</td>;
               })}
             </tr>
           ))}
@@ -589,15 +631,14 @@ function ScoreTable({ t, profile }) {
 
 export default function App() {
   const [cardAt, cardHandlers] = useCard();
-  const [metric, setMetric] = useState('raw');
-  const [profile, setProfile] = useState('natural');
-  // 누백 exists for the science profile only; choosing the humanities profile leaves it.
+  // The basis every score is counted on. A change moves the bars to their new heights and places.
+  const [basis, setBasis] = useState(BASIS);
+  const { metric, profile } = basis;
   const morphTo = (go) => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !document.startViewTransition) return go();
     const m = document.startViewTransition(() => flushSync(go)); m.ready.catch(() => {}); m.finished.catch(() => {});
   };
-  const chooseMetric = (id) => morphTo(() => { setMetric(id); if (id === 'cumulative') setProfile('natural'); });
-  const chooseProfile = (id) => morphTo(() => { setProfile(id); if (id !== 'natural' && metric === 'cumulative') setMetric('mean'); });
+  const choose = (change) => morphTo(() => setBasis((before) => fit(before, { ...before, ...change })));
   const [path, setPath] = useState(['total']);
   const [locale, changeLocale] = useLocale();
   const t = TEXT[locale];
@@ -641,9 +682,10 @@ export default function App() {
           {/* The scores come first: one chart, for the total and for each subject. */}
           <section className="totals" aria-labelledby="scores-title" {...cardHandlers}>
             <h2 className="visually-hidden" id="scores-title"><T k="scores" /></h2>
+            <Basis basis={basis} choose={choose} t={t} />
             <div className="chart-head">
               <div className="tab-rows">
-                {metric === 'raw' ? rows.map(({ depth, parent, nodes, chosen }) => (
+                {metric === 'raw' && rows.map(({ depth, parent, nodes, chosen }) => (
                   <Tabs
                     key={depth}
                     depth={depth}
@@ -653,10 +695,9 @@ export default function App() {
                     onChange={(id) => show(id === 'all' ? path.slice(0, depth) : [...path.slice(0, depth), id])}
                     controls="scores-panel"
                   />
-                )).concat(path.join('/') === 'total' ? [<p className="chart-metric-note" key="note"><T k="rawNote" /></p>] : []) : <p className="chart-metric-note"><T k={metric + 'Note'} />{metric === 'cumulative' && <> <a href="https://www.scribd.com/document/1070326852" target="_blank" rel="noopener noreferrer"><T k="cutoffs" /></a></>}</p>}
+                ))}
               </div>
               <div className="chart-side">
-                <MetricSwitch id="" metric={metric} profile={profile} onMetric={chooseMetric} onProfile={chooseProfile} t={t} />
                 <p className="chart-note">
                   {DARKER && (
                     <span className="chart-key">
@@ -670,17 +711,13 @@ export default function App() {
             </div>
             <div role="tabpanel" id="scores-panel" aria-labelledby={`tab-metric-${metric}`}>
               {metric === 'raw'
-                ? <Chart view={view} entries={ranked(view)} t={t} />
-                : <Chart view={view} entries={metricEntries(metric, profile)} t={t} full={metric === 'standard' ? Math.ceil(Math.max(...metricEntries(metric, profile).map((e) => e.high)) / 50) * 50 : 100} name={`${t.views[metric]} · ${t.views[`p-${profile}`]}`} />}
+                ? <Chart view={view} entries={ranked(view, basis)} t={t} />
+                : <Chart view={view} entries={metricEntries(basis)} t={t} full={metric === 'standard' ? Math.ceil(Math.max(...metricEntries(basis).map((e) => e.high)) / 50) * 50 : 100} name={`${t.views[metric]} · ${t.views[`p-${profile}`]}`} />}
             </div>
           </section>
 
           <section className="detail" aria-label={t.byGb} {...cardHandlers}>
             <figure className="chart" aria-label={t.byGb}>
-<div className="chart-head">
-              
-                <div className="chart-side"><MetricSwitch id="-gb" metric={metric} profile={profile} onMetric={chooseMetric} onProfile={chooseProfile} t={t} /></div>
-              </div>
               <ul className="legend" aria-label={t.families}>
                 {KEYS.map((key) => (
                   <li key={`${key.key} ${key.off}`}>
@@ -689,13 +726,13 @@ export default function App() {
                   </li>
                 ))}
               </ul>
-              <Field t={t} metric={metric} profile={profile} />
+              <Field t={t} basis={basis} />
             </figure>
           </section>
 
           <section className="detail" aria-labelledby="all-title">
             <h2 id="all-title"><T k="allScores" /></h2>
-            <ScoreTable t={t} profile={profile} />
+            <ScoreTable t={t} basis={basis} />
             {ROWS.some((row) => row.build === STARRED) && <p className="aside"><T k="starred" /></p>}
           </section>
 
@@ -720,7 +757,7 @@ export default function App() {
         </main>
       </div>
 
-      <Card at={cardAt} t={t} profile={profile} />
+      <Card at={cardAt} t={t} basis={basis} />
 
       {/* The same footer as the home page. */}
       <footer className="site-footer">
