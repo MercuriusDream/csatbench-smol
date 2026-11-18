@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import Admissions from './Admissions.jsx';
+import Admissions, { useLines } from './Admissions.jsx';
 import {
   BOARD, DEVICES, FAMILIES, FULL, PAPERS, HOME, LINKS, LOCALES, MARK, ROWS, SIZE_TICKS, STARRED, SUBJECTS, TEXT, TREE, UPDATED,
   points, size, sizeAt, ticks,
@@ -595,11 +595,12 @@ function Card({ show, t, basis }) {
   }, [show]);
   const ref = useRef(null);
   const [pos, setPos] = useState({ left: -9999, top: -9999 });
-  // What the card says changes only with its model, the run, the basis and the language; a move of
-  // the pointer only moves it.
+  // What the card says changes only with its model, the run, the basis and the language, and once
+  // the admission lines arrive; a move of the pointer only moves it.
+  const lines = useLines(Boolean(at));
   const tip = useMemo(
     () => at && <Tip entry={CARDS[at.name]} t={t} basis={basis} off={Boolean(at.off)} />,
-    [at?.name, at?.off, t, basis],
+    [at?.name, at?.off, t, basis, lines],
   );
   useLayoutEffect(() => {
     if (!at || !ref.current) return;

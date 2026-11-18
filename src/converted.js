@@ -1,4 +1,4 @@
-import { ADMISSION_ENTRIES, ADMISSION_MODELS } from './admissions.js';
+import { ADMISSION_MODELS } from './admissions.js';
 import { points } from './content.js';
 
 // Admission records distinguish runs by build and thinking mode.
@@ -203,14 +203,31 @@ export function card(entry, basis = BASIS) {
   return METRICS.map((metric) => ({ metric, own: metricOf(entry, false, metric, basis), off: entry.off ? metricOf(entry, true, metric, basis) : null }));
 }
 
+// The admission lines come apart from the page's script (see build.js), and the page asks for them
+// once it has settled. Until they are here, there are none to compare with. A failed fetch is
+// asked for again the next time.
+let LINES = null;
+let asked = null;
+export function loadLines() {
+  asked ??= import('./lines.js').then(
+    (module) => (LINES = module.ADMISSION_ENTRIES),
+    (error) => {
+      asked = null;
+      throw error;
+    },
+  );
+  return asked;
+}
+export const linesNow = () => LINES;
+
 // The highest 2026 어디가 70% lines a run's mean percentile on the basis is at or above, for its
 // profile: one unit per university, highest first. A comparison of means, not an admission.
 const rhu = (value) => Math.floor(value + 0.5);
 export function feasible(entry, off, basis = BASIS, n = 3) {
-  const c = convertedOf(entry, off, effectiveFor(basis, 'mean'));
+  const c = LINES && convertedOf(entry, off, effectiveFor(basis, 'mean'));
   if (!c) return [];
   const seen = new Set();
-  return ADMISSION_ENTRIES
+  return LINES
     .filter((line) => line[basis.profile] && rhu(c.mean[0]) >= line.value)
     .sort((a, b) => b.value - a.value || a.university.localeCompare(b.university))
     .filter((line) => !seen.has(line.university) && seen.add(line.university))

@@ -4,15 +4,38 @@ import { cp, rm } from 'node:fs/promises';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
 import App from './src/App.jsx';
+import * as admissions from './src/admissions.js';
 import { llmsTxt } from './src/content.js';
 
 const outdir = './dist';
 await rm(outdir, { recursive: true, force: true });
 
+// The admission lines are most of the site's data, and only the admissions panel and the hover
+// card's top three read them. So the page's script carries src/admissions.js without them, and
+// src/lines.js, which the page fetches once it has settled, carries them alone. Both are written
+// here from src/admissions.js as harness/admissions_build.py leaves it, with every name it exports.
+// Each value goes in as a JSON string, which the browser reads faster than the same value as code.
+const asJson = ([name, value]) => `export const ${name} = JSON.parse(${JSON.stringify(JSON.stringify(value))});`;
+const linesApart = {
+  name: 'lines-apart',
+  setup(build) {
+    build.onLoad({ filter: /[\\/]src[\\/]admissions\.js$/ }, () => ({
+      contents: Object.entries(admissions).filter(([name]) => name !== 'ADMISSION_ENTRIES').map(asJson).join('\n'),
+      loader: 'js',
+    }));
+    build.onLoad({ filter: /[\\/]src[\\/]lines\.js$/ }, () => ({
+      contents: asJson(['ADMISSION_ENTRIES', admissions.ADMISSION_ENTRIES]),
+      loader: 'js',
+    }));
+  },
+};
+
 const result = await Bun.build({
   entrypoints: ['./index.html'],
   outdir,
   minify: true,
+  splitting: true,
+  plugins: [linesApart],
   define: { 'process.env.NODE_ENV': '"production"' },
 });
 if (!result.success) {

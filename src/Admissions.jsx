@@ -1,7 +1,19 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal, flushSync } from 'react-dom';
-import { ADMISSION_ENTRIES, ADMISSION_META, ADMISSION_MODELS } from './admissions.js';
+import { ADMISSION_META, ADMISSION_MODELS } from './admissions.js';
 import { ADMISSION_TEXT, LOCALES, TEXT } from './content.js';
+import { linesNow, loadLines } from './converted.js';
+
+// The admission lines, or null until they have arrived (see loadLines). Something that needs them
+// asks for them if they have not been asked for yet, and is drawn again when they arrive.
+export function useLines(needed = true) {
+  const [, arrived] = useState(null);
+  const lines = linesNow();
+  useEffect(() => {
+    if (needed && !lines) loadLines().then(arrived, () => {});
+  }, [needed, lines]);
+  return lines;
+}
 
 function W({ k, a }) {
   return LOCALES.map((locale) => {
@@ -45,10 +57,11 @@ function AdmissionsBody({ locale }) {
   const profile = model.profiles[profileName];
   const rows = [...ORDER, ...INQUIRY.filter((id) => model.inquiry[id]).map((id) => ['inquiry', id])];
   const mid = (profile.percentile[0] + profile.percentile[1]) / 2;
+  const lines = useLines();
 
   const matches = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase();
-    return ADMISSION_ENTRIES
+    return (lines ?? [])
       .filter((entry) => entry[profileName])
       .map((entry) => ({ ...entry, verdict: verdictFor(profile, entry) }))
       .filter((entry) => verdict === 'all'
@@ -56,7 +69,7 @@ function AdmissionsBody({ locale }) {
       .filter((entry) => !needle || `${entry.universityFull} ${entry.university} ${entry.unit}`.toLocaleLowerCase().includes(needle))
       .sort((a, b) => (verdict === 'similar' ? Math.abs(a.value - mid) - Math.abs(b.value - mid) : 0)
         || b.value - a.value || a.university.localeCompare(b.university) || a.unit.localeCompare(b.unit));
-  }, [profile, profileName, query, verdict, mid]);
+  }, [lines, profile, profileName, query, verdict, mid]);
 
   return (
     <div className="admissions adm-body">
@@ -111,7 +124,7 @@ function AdmissionsBody({ locale }) {
             ))}
           </tbody>
         </table>
-        {!matches.length && <p className="aside"><W k="noEntries" /></p>}
+        {lines && !matches.length && <p className="aside"><W k="noEntries" /></p>}
       </div>
       <p className="aside">
         <W k={verdict === 'similar' ? 'similarNote' : 'lineNote'} />{' '}
