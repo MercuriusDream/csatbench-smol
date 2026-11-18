@@ -416,7 +416,16 @@ export const BOARD = [
       "earth1": 19,
       "earth2": 21,
       "geography-korea": 4,
-      "chemistry2": 12
+      "chemistry2": 12,
+      "german": 27,
+      "russian": 37,
+      "vietnamese": 34,
+      "spanish": 37,
+      "arabic": 22,
+      "japanese": 14,
+      "chinese": 27,
+      "french": 29,
+      "classical-chinese": 25
     },
     "off": null
   },
