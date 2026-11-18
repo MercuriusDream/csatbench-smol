@@ -662,9 +662,9 @@ export const BOARD = [
       "history-eastasia": 7,
       "physics2": 12,
       "commerce": 10,
-      "biology2": 10,
+      "biology2": 13,
       "ethics-life": 24,
-      "work-life": 9,
+      "work-life": 12,
       "history-world": 6,
       "geography-world": 2,
       "fisheries": 21,
@@ -674,7 +674,16 @@ export const BOARD = [
       "earth1": 8,
       "earth2": 12,
       "geography-korea": 8,
-      "chemistry2": 8
+      "chemistry2": 13,
+      "german": 13,
+      "russian": 10,
+      "vietnamese": 19,
+      "spanish": 17,
+      "arabic": 9,
+      "japanese": 21,
+      "chinese": 9,
+      "french": 18,
+      "classical-chinese": 14
     },
     "off": null
   }
