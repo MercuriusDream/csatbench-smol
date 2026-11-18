@@ -178,13 +178,13 @@ export const BOARD = [
     "build": "BF16",
     "family": "sensenova",
     "gb": 17.6,
-    "total": 376.0,
+    "total": 377.5,
     "subjects": [
       84.5,
       100.0,
       97,
       25,
-      69.5
+      71.0
     ],
     "papers": {
       "korean-common": 64,
@@ -197,7 +197,7 @@ export const BOARD = [
       "english": 97,
       "physics1": 32,
       "socioculture": 35,
-      "biology1": 34,
+      "biology1": 37,
       "chemistry1": 38,
       "history": 25
     },
