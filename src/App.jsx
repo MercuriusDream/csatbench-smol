@@ -702,6 +702,7 @@ export default function App() {
   const last = rows[rows.length - 1];
   const view = last.chosen ?? last.parent;
   const next = LOCALES[(LOCALES.indexOf(locale) + 1) % LOCALES.length];
+  const entries = metric === 'raw' ? ranked(view, basis) : metricEntries(basis);
 
   // Changing the view keeps every bar. Where the browser can, each one travels to its new place
   // and size; under reduced motion, and where it cannot, the chart changes in place.
@@ -767,8 +768,8 @@ export default function App() {
             </div>
             <div role="tabpanel" id="scores-panel" aria-labelledby={`tab-metric-${metric}`}>
               {metric === 'raw'
-                ? <Chart view={view} entries={ranked(view, basis)} t={t} />
-                : <Chart view={view} entries={metricEntries(basis)} t={t} full={metric === 'standard' ? Math.ceil(Math.max(...metricEntries(basis).map((e) => e.high)) / 50) * 50 : 100} name={`${t.views[metric]} · ${t.views[`p-${profile}`]}`} />}
+                ? <Chart view={view} entries={entries} t={t} />
+                : <Chart view={view} entries={entries} t={t} full={metric === 'standard' ? Math.ceil(Math.max(...entries.map((e) => e.high)) / 50) * 50 : 100} name={`${t.views[metric]} · ${t.views[`p-${profile}`]}`} />}
             </div>
           </section>
 
