@@ -598,6 +598,36 @@ export const BOARD = [
     }
   },
   {
+    "name": "LFM3-VL 2B",
+    "build": "4-bit",
+    "family": "lfm",
+    "gb": 1.59,
+    "total": 251.0,
+    "subjects": [
+      35.0,
+      79.0,
+      81,
+      30,
+      26.0
+    ],
+    "papers": {
+      "korean-common": 25,
+      "korean-language": 12,
+      "korean-speech": 8,
+      "math-common": 62,
+      "math-geometry": 18,
+      "math-calculus": 15,
+      "math-probability": 18,
+      "english": 81,
+      "physics1": 16,
+      "socioculture": 14,
+      "biology1": 9,
+      "chemistry1": 13,
+      "history": 30
+    },
+    "off": null
+  },
+  {
     "name": "Qwen3.5 2B",
     "build": "4-bit",
     "family": "qwen",
@@ -652,36 +682,6 @@ export const BOARD = [
       "chinese": 36,
       "french": 37,
       "classical-chinese": 39
-    },
-    "off": null
-  },
-  {
-    "name": "LFM3-VL 2B",
-    "build": "4-bit",
-    "family": "lfm",
-    "gb": 1.59,
-    "total": 233.5,
-    "subjects": [
-      35.0,
-      79.0,
-      81,
-      30,
-      8.5
-    ],
-    "papers": {
-      "korean-common": 25,
-      "korean-language": 12,
-      "korean-speech": 8,
-      "math-common": 62,
-      "math-geometry": 18,
-      "math-calculus": 15,
-      "math-probability": 18,
-      "english": 81,
-      "physics1": 6,
-      "socioculture": 9,
-      "biology1": 0,
-      "chemistry1": 2,
-      "history": 30
     },
     "off": null
   },
